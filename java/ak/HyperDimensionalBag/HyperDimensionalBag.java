@@ -25,8 +25,7 @@ import cpw.mods.fml.common.registry.GameData;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.GameRegistry.UniqueIdentifier;
 
-@Mod(modid="HyperDimensionalBag", name="HyperDimensionalBag", version="1.0d",dependencies="required-after:FML")
-//@NetworkMod(clientSideRequired=true, serverSideRequired=false)
+@Mod(modid="HyperDimensionalBag", name="HyperDimensionalBag", version="1.0d",dependencies="required-after:FML", useMetadata = true)
 
 public class HyperDimensionalBag
 {
