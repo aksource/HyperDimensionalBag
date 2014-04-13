@@ -25,7 +25,7 @@ import cpw.mods.fml.common.registry.GameData;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.GameRegistry.UniqueIdentifier;
 
-@Mod(modid="HyperDimensionalBag", name="HyperDimensionalBag", version="1.0e",dependencies="required-after:FML", useMetadata = true)
+@Mod(modid="HyperDimensionalBag", name="HyperDimensionalBag", version="1.0f",dependencies="required-after:Forge@[10.12.0.1056,)", useMetadata = true)
 
 public class HyperDimensionalBag
 {
@@ -33,8 +33,7 @@ public class HyperDimensionalBag
 	public static HyperDimensionalBag instance;
 	@SidedProxy(clientSide = "ak.HyperDimensionalBag.ClientProxy", serverSide = "ak.HyperDimensionalBag.CommonProxy")
 	public static CommonProxy proxy;
-	
-	public static int bagID = 30000;
+
 	public static int guiID = 0;
 	public static String GuiBagTex ="textures/gui/GuiBag.png";
 	public static String TextureDomain = "hyperdimensionalbag:";
@@ -51,8 +50,7 @@ public class HyperDimensionalBag
 		hardRecipe = config.get(Configuration.CATEGORY_GENERAL, "HardRecipe", false).getBoolean(false);
 		config.save();
 		HDBag = new ItemHDBag().setUnlocalizedName(this.TextureDomain + "Bag").setTextureName(this.TextureDomain + "Bag").setCreativeTab(CreativeTabs.tabTools);
-//		GameRegistry.registerItem(HDBag, "hyperdimentionalbag");
-		registerItemToId(HDBag, "hyperdimentionalbag", "HyperDimensionalBag", bagID);
+		GameRegistry.registerItem(HDBag, "hyperdimentionalbag");
 	}
 	@Mod.EventHandler
 	public void load(FMLInitializationEvent event)
@@ -70,32 +68,6 @@ public class HyperDimensionalBag
 	@Mod.EventHandler
 	public void postInit(FMLPostInitializationEvent event)
 	{
-		loadSB = Loader.isModLoaded("mod_StorageBox");
-	}
-	private void registerItemToId(Item item, String name, String modId, int Id)
-	{
-		Map<UniqueIdentifier, ModContainer> customOwners = ObfuscationReflectionHelper.getPrivateValue(GameData.class, null, 3);
-        ModContainer mc = Loader.instance().activeModContainer();
-        if (modId != null)
-        {
-            customOwners.put(new UniqueIdentifier(modId + ":" + name), mc);
-        }
-        if (item instanceof ItemBlock)
-        {
-            throw new RuntimeException("Cannot register an itemblock separately from it's block");
-        }
-        int itemId = GameData.itemRegistry.add(Id, name, item);
-        GameData.blockRegistry.useSlot(itemId);
-	}
-	private void registerBlockToId(Block block, String name, String modId, int Id)
-	{
-		Map<UniqueIdentifier, ModContainer> customOwners = ObfuscationReflectionHelper.getPrivateValue(GameData.class, null, 3);
-        ModContainer mc = Loader.instance().activeModContainer();
-        if (modId != null)
-        {
-            customOwners.put(new UniqueIdentifier(modId + ":" + name), mc);
-        }
-        int blockId = GameData.blockRegistry.add(Id, name, block);
-        GameData.itemRegistry.useSlot(blockId);
+		loadSB = Loader.isModLoaded("net.minecraft.storagebox.mod_StorageBox");
 	}
 }

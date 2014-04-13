@@ -3,6 +3,7 @@ package ak.HyperDimensionalBag;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.storagebox.ItemStorageBox;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -38,17 +39,17 @@ public class PlayerPickHook
 				{
 					for(int j=0;j<data.getSizeInventory();j++)
 					{
-//						if(data.items[j] != null && data.items[j].getItem() instanceof ItemStorageBox
-//								&& ItemStorageBox.isAutoCollect(data.items[j]))
-//						{
-//							storageStack = ItemStorageBox.peekItemStackAll(data.items[j]);
-//							if(storageStack != null && item.isItemEqual(storageStack))
-//							{
-//								ItemStorageBox.addItemStack(data.items[j], item);
-//								item.stackSize = 0;
-//								return true;
-//							}
-//						}
+						if(data.getStackInSlot(j) != null && data.getStackInSlot(j).getItem() instanceof ItemStorageBox
+								&& ItemStorageBox.isAutoCollect(data.getStackInSlot(j)))
+						{
+							storageStack = ItemStorageBox.peekItemStackAll(data.getStackInSlot(j));
+							if(storageStack != null && item.isItemEqual(storageStack))
+							{
+								ItemStorageBox.addItemStack(data.getStackInSlot(j), item);
+								item.stackSize = 0;
+								return true;
+							}
+						}
 					}
 				}
 			}
