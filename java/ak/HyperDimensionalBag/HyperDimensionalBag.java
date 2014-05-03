@@ -25,7 +25,7 @@ import cpw.mods.fml.common.registry.GameData;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.GameRegistry.UniqueIdentifier;
 
-@Mod(modid="HyperDimensionalBag", name="HyperDimensionalBag", version="1.0f",dependencies="required-after:Forge@[10.12.0.1056,)", useMetadata = true)
+@Mod(modid="HyperDimensionalBag", name="HyperDimensionalBag", version="1.1",dependencies="required-after:Forge@[10.12.0.1056,)", useMetadata = true)
 
 public class HyperDimensionalBag
 {
@@ -40,7 +40,10 @@ public class HyperDimensionalBag
 	public static String Assets = "hyperdimensionalbag";
 	public static boolean loadSB = false;
 	public static boolean hardRecipe;
+    public static int maxRange;
+    public static boolean exchangeInvisibleBlock;
 	public static Item HDBag;
+    public static Item itemBlockExchanger;
 	
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event)
@@ -48,9 +51,13 @@ public class HyperDimensionalBag
 		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
 		config.load();
 		hardRecipe = config.get(Configuration.CATEGORY_GENERAL, "HardRecipe", false).getBoolean(false);
-		config.save();
+        maxRange = config.get(Configuration.CATEGORY_GENERAL, "maxBlockExchangeRange", 10).getInt();
+        exchangeInvisibleBlock = config.get(Configuration.CATEGORY_GENERAL, "exchangeInvisibleBlock", false, "true : exchange invisible block").getBoolean(false);
+        config.save();
 		HDBag = new ItemHDBag().setUnlocalizedName(this.TextureDomain + "Bag").setTextureName(this.TextureDomain + "Bag").setCreativeTab(CreativeTabs.tabTools);
 		GameRegistry.registerItem(HDBag, "hyperdimentionalbag");
+        itemBlockExchanger = new ItemBlockExchanger().setUnlocalizedName(this.TextureDomain + "BlockExchanger").setTextureName(this.TextureDomain + "BlockExchanger").setCreativeTab(CreativeTabs.tabTools);
+        GameRegistry.registerItem(itemBlockExchanger, "itemblockexchanger");
 	}
 	@Mod.EventHandler
 	public void load(FMLInitializationEvent event)
@@ -63,8 +70,8 @@ public class HyperDimensionalBag
 			GameRegistry.addShapedRecipe(new ItemStack(HDBag, 1, 15), new Object[]{"LDL","DCD","LDL", 'L',Items.leather,'D',Items.diamond,'C',Blocks.chest});
 		else
 			GameRegistry.addShapedRecipe(new ItemStack(HDBag, 1, 15), new Object[]{"LDL","DCD","LDL", 'L',Items.leather,'D',Items.diamond,'C',Items.nether_star});
-		
-	}
+        GameRegistry.addShapedRecipe(new ItemStack(itemBlockExchanger), " DE"," ID","S  ", 'E', Blocks.emerald_block, 'D', Blocks.diamond_block, 'I', Blocks.iron_block, 'S', Items.stick);
+    }
 	@Mod.EventHandler
 	public void postInit(FMLPostInitializationEvent event)
 	{
