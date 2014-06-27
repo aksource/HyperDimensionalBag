@@ -1,10 +1,9 @@
 package ak.HyperDimensionalBag;
 
+import cpw.mods.fml.common.network.IGuiHandler;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
-import cpw.mods.fml.common.network.IGuiHandler;
 
 public class CommonProxy implements IGuiHandler
 {
@@ -17,7 +16,7 @@ public class CommonProxy implements IGuiHandler
 			if( heldItem!= null && heldItem.getItem() instanceof ItemHDBag)
 			{
                 InventoryBag inventorybag = new InventoryBag(heldItem, world);
-				return new ContainerBag(player.inventory, (IInventory) inventorybag, heldItem.getItemDamage());
+				return new ContainerBag(player.inventory,  inventorybag, heldItem.getItemDamage());
 			}
 			else return null;
 		}
@@ -32,7 +31,7 @@ public class CommonProxy implements IGuiHandler
 			if( heldItem!= null && heldItem.getItem() instanceof ItemHDBag)
 			{
                 InventoryBag inventorybag = new InventoryBag(heldItem, world);
-				return new GuiBag(player.inventory, (IInventory) inventorybag, heldItem.getItemDamage());
+				return new GuiBag(player.inventory,  inventorybag, heldItem.getItemDamage());
 			}
 			else return null;
 		}

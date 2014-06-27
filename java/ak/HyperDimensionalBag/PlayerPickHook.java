@@ -7,6 +7,10 @@ import net.minecraft.storagebox.ItemStorageBox;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.oredict.OreDictionary;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class PlayerPickHook
 {
@@ -16,13 +20,13 @@ public class PlayerPickHook
 		{
 			EntityPlayer player = event.entityPlayer;
 			EntityItem item = event.item;
-			int stackSize = item.getEntityItem().stackSize;
 			ItemStack[] inv = player.inventory.mainInventory;
 			if(pickUpItemInBag(player.worldObj,inv,item.getEntityItem()))
 			{
 				event.setCanceled(true);
 				player.worldObj.playSoundAtEntity(item, "random.pop", 0.2F, ((player.worldObj.rand.nextFloat() - player.worldObj.rand.nextFloat()) * 0.7F + 1.0F) * 2.0F);
-				player.onItemPickup(item, stackSize);
+                int stackSize = item.getEntityItem().stackSize;
+                player.onItemPickup(item, stackSize);
 			}
 		}
 	}
@@ -30,30 +34,55 @@ public class PlayerPickHook
 	{
 		InventoryBag data;
 		ItemStack storageStack;
-		for(int i=0;i<inv.length;i++)
+		for(ItemStack itemStack : inv)
 		{
-			if(inv[i] != null && inv[i].getItem() instanceof ItemHDBag)
+			if(itemStack != null && itemStack.getItem() instanceof ItemHDBag)
 			{
-                data = new InventoryBag(inv[i], world);
-				if(data != null)
-				{
-					for(int j=0;j<data.getSizeInventory();j++)
-					{
-						if(data.getStackInSlot(j) != null && data.getStackInSlot(j).getItem() instanceof ItemStorageBox
-								&& ItemStorageBox.isAutoCollect(data.getStackInSlot(j)))
-						{
-							storageStack = ItemStorageBox.peekItemStackAll(data.getStackInSlot(j));
-							if(storageStack != null && item.isItemEqual(storageStack))
-							{
-								ItemStorageBox.addItemStack(data.getStackInSlot(j), item);
-								item.stackSize = 0;
-								return true;
-							}
-						}
-					}
-				}
+                data = new InventoryBag(itemStack, world);
+                for(int j = 0 ; j < data.getSizeInventory();j++)
+                {
+                    if(data.getStackInSlot(j) != null && data.getStackInSlot(j).getItem() instanceof ItemStorageBox
+                            && ItemStorageBox.isAutoCollect(data.getStackInSlot(j)))
+                    {
+                        storageStack = ItemStorageBox.peekItemStackAll(data.getStackInSlot(j));
+                        if(storageStack != null && areOreNameEquals(item, storageStack))
+                        {
+                            ItemStack copyStack = storageStack.copy();
+                            copyStack.stackSize = item.stackSize;
+                            ItemStorageBox.addItemStack(data.getStackInSlot(j), copyStack);
+                            item.stackSize = 0;
+                            return true;
+                        }
+                    }
+                }
 			}
 		}
 		return false;
 	}
+
+    private boolean areOreNameEquals(ItemStack check, ItemStack target) {
+        List<String> oreNames = getOreNames(target);
+        if (oreNames != null && oreNames.size() > 0) {
+            for (String oreName : oreNames) {
+                for (ItemStack itemStack : OreDictionary.getOres(oreName)) {
+                    if (check.isItemEqual(itemStack)) return true;
+                }
+            }
+            return false;
+        } else {
+            return check.isItemEqual(target);
+        }
+    }
+
+    private List<String> getOreNames(ItemStack itemStack) {
+        int[] oreIDs = OreDictionary.getOreIDs(itemStack);
+        if (oreIDs.length > 0) {
+            List<String> oreNames = new ArrayList<>(oreIDs.length);
+            for (int id : oreIDs) {
+                oreNames.add(OreDictionary.getOreName(id));
+            }
+            return oreNames;
+        }
+        return null;
+    }
 }

@@ -1,29 +1,21 @@
 package ak.HyperDimensionalBag;
 
-import java.util.Map;
-
-import net.minecraft.block.Block;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.oredict.OreDictionary;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.ModContainer;
-import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
-import cpw.mods.fml.common.registry.GameData;
 import cpw.mods.fml.common.registry.GameRegistry;
-import cpw.mods.fml.common.registry.GameRegistry.UniqueIdentifier;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.oredict.OreDictionary;
 
 @Mod(modid="HyperDimensionalBag", name="HyperDimensionalBag", version="@VERSION@",dependencies="required-after:Forge@[10.12.0.1056,)", useMetadata = true)
 
@@ -54,9 +46,9 @@ public class HyperDimensionalBag
         maxRange = config.get(Configuration.CATEGORY_GENERAL, "maxBlockExchangeRange", 10).getInt();
         exchangeInvisibleBlock = config.get(Configuration.CATEGORY_GENERAL, "exchangeInvisibleBlock", false, "true : exchange invisible block").getBoolean(false);
         config.save();
-		HDBag = new ItemHDBag().setUnlocalizedName(this.TextureDomain + "Bag").setTextureName(this.TextureDomain + "Bag").setCreativeTab(CreativeTabs.tabTools);
+		HDBag = new ItemHDBag().setUnlocalizedName(TextureDomain + "Bag").setTextureName(TextureDomain + "Bag").setCreativeTab(CreativeTabs.tabTools);
 		GameRegistry.registerItem(HDBag, "hyperdimentionalbag");
-        itemBlockExchanger = new ItemBlockExchanger().setUnlocalizedName(this.TextureDomain + "BlockExchanger").setTextureName(this.TextureDomain + "BlockExchanger").setCreativeTab(CreativeTabs.tabTools);
+        itemBlockExchanger = new ItemBlockExchanger().setUnlocalizedName(TextureDomain + "BlockExchanger").setTextureName(TextureDomain + "BlockExchanger").setCreativeTab(CreativeTabs.tabTools);
         GameRegistry.registerItem(itemBlockExchanger, "itemblockexchanger");
 	}
 	@Mod.EventHandler
@@ -67,9 +59,9 @@ public class HyperDimensionalBag
 		for(int i = 0;i<15;i++)
 			GameRegistry.addShapelessRecipe(new ItemStack(HDBag, 1, i), new ItemStack(HDBag, 1, OreDictionary.WILDCARD_VALUE), new ItemStack(Items.dye, 1, i));
 		if(!hardRecipe)
-			GameRegistry.addShapedRecipe(new ItemStack(HDBag, 1, 15), new Object[]{"LDL","DCD","LDL", 'L',Items.leather,'D',Items.diamond,'C',Blocks.chest});
+			GameRegistry.addShapedRecipe(new ItemStack(HDBag, 1, 15), "LDL","DCD","LDL", 'L',Items.leather,'D',Items.diamond,'C',Blocks.chest);
 		else
-			GameRegistry.addShapedRecipe(new ItemStack(HDBag, 1, 15), new Object[]{"LDL","DCD","LDL", 'L',Items.leather,'D',Items.diamond,'C',Items.nether_star});
+			GameRegistry.addShapedRecipe(new ItemStack(HDBag, 1, 15), "LDL","DCD","LDL", 'L',Items.leather,'D',Items.diamond,'C',Items.nether_star);
         GameRegistry.addShapedRecipe(new ItemStack(itemBlockExchanger), " DE"," ID","S  ", 'E', Blocks.emerald_block, 'D', Blocks.diamond_block, 'I', Blocks.iron_block, 'S', Items.stick);
     }
 	@Mod.EventHandler

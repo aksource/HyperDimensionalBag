@@ -71,6 +71,7 @@ public class ItemBlockExchanger extends ItemTool {
 	}
 
 	@Override
+    @SuppressWarnings("unchecked")
 	public void addInformation(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, List par3List, boolean par4) {
 		String blockName;
 		int range = 1 + getRange(par1ItemStack) * 2;
@@ -88,6 +89,7 @@ public class ItemBlockExchanger extends ItemTool {
 	}
 	
 	private void getDroppedBlock(World world, EntityPlayer player) {
+        @SuppressWarnings("unchecked")
 		List<EntityItem> list = world.getEntitiesWithinAABB(EntityItem.class, player.boundingBox.expand(5d, 5d, 5d));
 		if (list == null) return;
 		double d0, d1, d2;
@@ -153,7 +155,7 @@ public class ItemBlockExchanger extends ItemTool {
         for(int i = 0; i < inv.getSizeInventory();i++) {
             ItemStack item = inv.getStackInSlot(i);
             if (item == null) continue;
-            else if (checkValidBlock(player.worldObj, targetBlockStack, item)) {
+            if (checkValidBlock(player.worldObj, targetBlockStack, item)) {
                 item.stackSize--;
                 if(item.stackSize == 0) inv.setInventorySlotContents(i, null);
                 return true;
@@ -173,7 +175,7 @@ public class ItemBlockExchanger extends ItemTool {
 		ItemStack targetBlockStack = new ItemStack(getTargetBlock(exchangeItem), 1, getTargetBlockMeta(exchangeItem));
 		for(ItemStack item : inv.mainInventory) {
             if(item == null) continue;
-            else if (checkValidBlock(player.worldObj, targetBlockStack, item)) return true;
+            if (checkValidBlock(player.worldObj, targetBlockStack, item)) return true;
 			else if (HyperDimensionalBag.loadSB && item.getItem() instanceof ItemStorageBox && ItemStorageBox.peekItemStackAll(item) != null && checkValidBlock(player.worldObj, targetBlockStack, ItemStorageBox.peekItemStackAll(item)) && ItemStorageBox.peekItemStackAll(item).stackSize > 1) {
 				return true;
 			}

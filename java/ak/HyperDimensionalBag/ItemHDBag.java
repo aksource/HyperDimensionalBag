@@ -34,6 +34,7 @@ public class ItemHDBag extends Item{
     }
     @SideOnly(Side.CLIENT)
     @Override
+    @SuppressWarnings("unchecked")
     public void getSubItems(Item par1, CreativeTabs par2CreativeTabs, List par3List)
     {
     	for(int i=0;i<16;i++)
@@ -69,7 +70,7 @@ public class ItemHDBag extends Item{
 	{
 		String itemName = "Bag";
 		int itemDamage = MathHelper.clamp_int(var1.getItemDamage(),0,15);
-		String var3 = String.format("%s_%s", itemName, itemDamage);;
+		String var3 = String.format("%s_%s", itemName, itemDamage);
 		BagData var4 = (BagData)var2.loadItemData(BagData.class, var3);
 
 		if (var4 == null)
