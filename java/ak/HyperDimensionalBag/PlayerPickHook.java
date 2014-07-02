@@ -1,5 +1,7 @@
 package ak.HyperDimensionalBag;
 
+import ak.HyperDimensionalBag.inventory.InventoryBag;
+import ak.HyperDimensionalBag.item.ItemHDBag;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;

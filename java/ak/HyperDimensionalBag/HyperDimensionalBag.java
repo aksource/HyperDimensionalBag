@@ -1,5 +1,7 @@
 package ak.HyperDimensionalBag;
 
+import ak.HyperDimensionalBag.item.ItemBlockExchanger;
+import ak.HyperDimensionalBag.item.ItemHDBag;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
@@ -23,7 +25,7 @@ public class HyperDimensionalBag
 {
 	@Mod.Instance("HyperDimensionalBag")
 	public static HyperDimensionalBag instance;
-	@SidedProxy(clientSide = "ak.HyperDimensionalBag.ClientProxy", serverSide = "ak.HyperDimensionalBag.CommonProxy")
+	@SidedProxy(clientSide = "ak.HyperDimensionalBag.client.ClientProxy", serverSide = "ak.HyperDimensionalBag.CommonProxy")
 	public static CommonProxy proxy;
 
 	public static int guiID = 0;
@@ -56,6 +58,7 @@ public class HyperDimensionalBag
 	{
 		MinecraftForge.EVENT_BUS.register(new PlayerPickHook());
 		NetworkRegistry.INSTANCE.registerGuiHandler(this, proxy);
+        proxy.registerClientInfo();
 		for(int i = 0;i<15;i++)
 			GameRegistry.addShapelessRecipe(new ItemStack(HDBag, 1, i), new ItemStack(HDBag, 1, OreDictionary.WILDCARD_VALUE), new ItemStack(Items.dye, 1, i));
 		if(!hardRecipe)

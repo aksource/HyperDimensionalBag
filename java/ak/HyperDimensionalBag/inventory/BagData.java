@@ -1,4 +1,4 @@
-package ak.HyperDimensionalBag;
+package ak.HyperDimensionalBag.inventory;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;

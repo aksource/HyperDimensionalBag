@@ -1,5 +1,6 @@
-package ak.HyperDimensionalBag;
+package ak.HyperDimensionalBag.inventory;
 
+import ak.HyperDimensionalBag.item.ItemHDBag;
 import invtweaks.api.container.ChestContainer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;

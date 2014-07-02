@@ -1,5 +1,9 @@
 package ak.HyperDimensionalBag;
 
+import ak.HyperDimensionalBag.client.GuiBag;
+import ak.HyperDimensionalBag.inventory.ContainerBag;
+import ak.HyperDimensionalBag.inventory.InventoryBag;
+import ak.HyperDimensionalBag.item.ItemHDBag;
 import cpw.mods.fml.common.network.IGuiHandler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;

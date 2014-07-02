@@ -1,9 +1,10 @@
-package ak.HyperDimensionalBag;
+package ak.HyperDimensionalBag.item;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import ak.HyperDimensionalBag.HyperDimensionalBag;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
@@ -114,7 +115,7 @@ public class ItemBlockExchanger extends ItemTool {
 		}
 	}
 	
-	private ChunkPosition getNextChunkPosition(ChunkPosition chunk, ForgeDirection side)
+	public static ChunkPosition getNextChunkPosition(ChunkPosition chunk, ForgeDirection side)
 	{
 		int dx = side.offsetX;
 		int dy = side.offsetY;
@@ -122,23 +123,23 @@ public class ItemBlockExchanger extends ItemTool {
 		return new ChunkPosition(chunk.chunkPosX + dx,chunk.chunkPosY + dy,chunk.chunkPosZ + dz);
 	}
 	
-	private boolean checkBlockInRange(ItemStack item, ChunkPosition check, ChunkPosition origin) {
+	public static  boolean checkBlockInRange(ItemStack item, ChunkPosition check, ChunkPosition origin) {
 		return Math.abs(check.chunkPosX - origin.chunkPosX) <= getRange(item) && Math.abs(check.chunkPosY - origin.chunkPosY) <= getRange(item) && Math.abs(check.chunkPosZ - origin.chunkPosZ) <= getRange(item);
 	}
 	
-	private boolean isVisibleBlock(World world, ChunkPosition chunk) {
+	public static  boolean isVisibleBlock(World world, ChunkPosition chunk) {
 		return HyperDimensionalBag.exchangeInvisibleBlock || world.getBlock(chunk.chunkPosX, chunk.chunkPosY, chunk.chunkPosZ) == Blocks.air || !world.getBlock(chunk.chunkPosX, chunk.chunkPosY, chunk.chunkPosZ).isOpaqueCube();
 	}
 	
 	private boolean exchangeBlock(World world, EntityPlayer player, ItemStack item, ChunkPosition chunk, ItemStack firstFocusBlock) {
 		Block block = world.getBlock(chunk.chunkPosX, chunk.chunkPosY, chunk.chunkPosZ);
-		if(block == null) return false;
+		if(block == Blocks.air) return false;
 		int meta = world.getBlockMetadata(chunk.chunkPosX, chunk.chunkPosY, chunk.chunkPosZ);
 		ItemStack nowBlock = new ItemStack(block, 1, meta);
 		Block targetBlock = getTargetBlock(item);
 		int targetBlockMeta = getTargetBlockMeta(item);
         ItemStack targetBlockStack = new ItemStack(targetBlock, 1, targetBlockMeta);
-		if(targetBlockStack.isItemEqual(nowBlock) || !isAllExchangeMode(item) && !firstFocusBlock.isItemEqual(nowBlock)) return false;
+		if(targetBlockStack.isItemEqual(nowBlock) || (!isAllExchangeMode(item) && !firstFocusBlock.isItemEqual(nowBlock))) return false;
 		if(decreaseBlockFromInventory(item, player) && world.setBlock(chunk.chunkPosX, chunk.chunkPosY, chunk.chunkPosZ, targetBlock, targetBlockMeta, 3)){
 			block.onBlockHarvested(world, chunk.chunkPosX, chunk.chunkPosY, chunk.chunkPosZ, meta, player);
 			block.onBlockDestroyedByPlayer(world,chunk.chunkPosX, chunk.chunkPosY, chunk.chunkPosZ, meta);
@@ -197,14 +198,14 @@ public class ItemBlockExchanger extends ItemTool {
         }
     }
 
-	private void setTargetBlock(ItemStack item, Block block) {
+	private static void setTargetBlock(ItemStack item, Block block) {
 		NBTTagCompound nbt = item.getTagCompound();
 		if (nbt == null) nbt = new NBTTagCompound();
 		nbt.setString("HDB|blockExchangeId", GameRegistry.findUniqueIdentifierFor(block).toString());
 		item.setTagCompound(nbt);
 	}
 	
-	private Block getTargetBlock(ItemStack item) {
+	public static Block getTargetBlock(ItemStack item) {
 		NBTTagCompound nbt = item.getTagCompound();
 		if (nbt == null) nbt = new NBTTagCompound();
         String blockId = nbt.getString("HDB|blockExchangeId");
@@ -215,26 +216,26 @@ public class ItemBlockExchanger extends ItemTool {
         }
 	}
 	
-	private void setTargetBlockMeta(ItemStack item, int meta) {
+	private static void setTargetBlockMeta(ItemStack item, int meta) {
 		NBTTagCompound nbt = item.getTagCompound();
 		if (nbt == null) nbt = new NBTTagCompound();
 		nbt.setInteger("HDB|blockExchangeMeta", meta);
 		item.setTagCompound(nbt);
 	}
 	
-	private int getTargetBlockMeta(ItemStack item) {
+	public static int getTargetBlockMeta(ItemStack item) {
 		NBTTagCompound nbt = item.getTagCompound();
 		if (nbt == null) nbt = new NBTTagCompound();
 		return nbt.getInteger("HDB|blockExchangeMeta");
 	}
 	
-	private int getRange(ItemStack item) {
+	public static int getRange(ItemStack item) {
 		NBTTagCompound nbt = item.getTagCompound();
 		if (nbt == null) nbt = new NBTTagCompound();
 		return nbt.getInteger("HDB|blockRange");
 	}
 	
-	private void setRange(ItemStack item, int newRange) {
+	private static void setRange(ItemStack item, int newRange) {
 		NBTTagCompound nbt = item.getTagCompound();
 		if (nbt == null) nbt = new NBTTagCompound();
 		newRange = newRange < 0 ? HyperDimensionalBag.maxRange: newRange > HyperDimensionalBag.maxRange ? 0 : newRange;
@@ -242,13 +243,13 @@ public class ItemBlockExchanger extends ItemTool {
 		item.setTagCompound(nbt);
 	}
 	
-	private boolean isAllExchangeMode(ItemStack item) {
+	public static boolean isAllExchangeMode(ItemStack item) {
 		NBTTagCompound nbt = item.getTagCompound();
 		if (nbt == null) nbt = new NBTTagCompound();
 		return nbt.getBoolean("HDB|blockAllMode");
 	}
 	
-	private void setAllExchangeMode(ItemStack item, boolean mode) {
+	private static void setAllExchangeMode(ItemStack item, boolean mode) {
 		NBTTagCompound nbt = item.getTagCompound();
 		if (nbt == null) nbt = new NBTTagCompound();
 		nbt.setBoolean("HDB|blockAllMode", mode);

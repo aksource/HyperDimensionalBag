@@ -1,6 +1,7 @@
-package ak.HyperDimensionalBag;
+package ak.HyperDimensionalBag.client;
 
-import net.minecraft.client.Minecraft;
+import ak.HyperDimensionalBag.inventory.ContainerBag;
+import ak.HyperDimensionalBag.HyperDimensionalBag;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;

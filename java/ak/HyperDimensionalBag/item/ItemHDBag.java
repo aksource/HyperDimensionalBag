@@ -1,7 +1,9 @@
-package ak.HyperDimensionalBag;
+package ak.HyperDimensionalBag.item;
 
 import java.util.List;
 
+import ak.HyperDimensionalBag.HyperDimensionalBag;
+import ak.HyperDimensionalBag.inventory.BagData;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
