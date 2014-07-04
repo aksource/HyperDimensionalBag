@@ -1,6 +1,7 @@
 package ak.HyperDimensionalBag.client;
 
 import ak.HyperDimensionalBag.item.ItemBlockExchanger;
+import static ak.HyperDimensionalBag.item.ItemBlockExchanger.EnumBuildMode;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -9,6 +10,7 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MovingObjectPosition;
@@ -45,8 +47,28 @@ public class RenderBlockSelectionBox {
             int face = MOP.sideHit;
             ItemStack blockStack = new ItemStack(block, 1, meta);
             ForgeDirection direction = ForgeDirection.VALID_DIRECTIONS[face];
-            searchBlock(world, blockStack, chunk, chunk, direction, direction, currentItem, list);
-            renderBlockListSelectionBox(list, world, player, event.partialTicks);
+            int mode = ItemBlockExchanger.getBuildMode(currentItem);
+            boolean allMode = ItemBlockExchanger.isAllExchangeMode(currentItem);
+            if (EnumBuildMode.getMode(mode) == EnumBuildMode.exchange) {
+                searchBlock(world, blockStack, chunk, chunk, direction, direction, currentItem, list);
+                renderBlockListSelectionBox(list, world, player, event.partialTicks);
+            }
+            int range = ItemBlockExchanger.getRange(currentItem);
+
+            if (EnumBuildMode.getMode(mode) == EnumBuildMode.wall) {
+                list = ItemBlockExchanger.getNextWallChunkPositionList(world, player, chunk, direction, range, allMode);
+                renderBlockListSelectionBox(list, world, player, event.partialTicks);
+            }
+
+            if (EnumBuildMode.getMode(mode) == EnumBuildMode.pillar) {
+                list = ItemBlockExchanger.getNextPillarChunkPositionList(world, chunk, direction, range, allMode);
+                renderBlockListSelectionBox(list, world, player, event.partialTicks);
+            }
+
+            if (EnumBuildMode.getMode(mode) == EnumBuildMode.cube) {
+                list = ItemBlockExchanger.getNextCubeChunkPositionList(world, player, chunk, direction, range, allMode);
+                renderBlockListSelectionBox(list, world, player, event.partialTicks);
+            }
             event.setCanceled(true);
         }
     }

@@ -19,6 +19,8 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.oredict.OreDictionary;
 
+import java.util.logging.Logger;
+
 @Mod(modid="HyperDimensionalBag", name="HyperDimensionalBag", version="@VERSION@",dependencies="required-after:Forge@[10.12.0.1056,)", useMetadata = true)
 
 public class HyperDimensionalBag
@@ -38,6 +40,8 @@ public class HyperDimensionalBag
     public static boolean exchangeInvisibleBlock;
 	public static Item HDBag;
     public static Item itemBlockExchanger;
+
+    public static final Logger LOGGER = Logger.getLogger("HyperDimensionalBag");
 	
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event)
