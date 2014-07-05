@@ -150,12 +150,15 @@ public class ItemBlockExchanger extends ItemTool {
 
     public static List<ChunkPosition> getNextWallChunkPositionList(World world, EntityPlayer player, ChunkPosition originPosition, ForgeDirection side, int range, boolean allMode) {
         List<ChunkPosition> list = new ArrayList<>();
-        int basePositionX = originPosition.chunkPosX + side.offsetX;
-        int basePositionY = originPosition.chunkPosY + side.offsetY;
-        int basePositionZ = originPosition.chunkPosZ + side.offsetZ;
-        int dx = 1 - Math.abs(side.offsetX);
-        int dy = 1 - Math.abs(side.offsetY);
-        int dz = 1 - Math.abs(side.offsetZ);
+        int offsetX = side.offsetX;
+        int offsetY = side.offsetY;
+        int offsetZ = side.offsetZ;
+        int basePositionX = originPosition.chunkPosX + offsetX;
+        int basePositionY = originPosition.chunkPosY + offsetY;
+        int basePositionZ = originPosition.chunkPosZ + offsetZ;
+        int dx = 1 - Math.abs(offsetX);
+        int dy = 1 - Math.abs(offsetY);
+        int dz = 1 - Math.abs(offsetZ);
 
         int start = 0;
         int end = range * 2;
@@ -170,6 +173,8 @@ public class ItemBlockExchanger extends ItemTool {
             if (centerDifX < 0.5D && centerDifZ < 0.5D) {
                 start = -range;
                 end = range;
+                offsetX = offsetY;
+                offsetY = 0;
             }
         } else {
             dy = 0;
@@ -177,9 +182,9 @@ public class ItemBlockExchanger extends ItemTool {
 
         for (int axis1 = start; axis1 <= end; axis1++) {
             for (int axis2 = -range; axis2 <= range; axis2++) {
-                int x1 = basePositionX + side.offsetX * axis1 + dx * axis2;
-                int y1 = basePositionY + side.offsetY * axis1 + dy * axis2;
-                int z1 = basePositionZ + side.offsetZ * axis1 + dz * axis2;
+                int x1 = basePositionX + offsetX * axis1 + dx * axis2;
+                int y1 = basePositionY + offsetY * axis1 + dy * axis2;
+                int z1 = basePositionZ + offsetZ * axis1 + dz * axis2;
                 if (world.getBlock(x1, y1, z1) == Blocks.air || allMode) {
                     list.add(new ChunkPosition(x1, y1, z1));
                 }
@@ -207,15 +212,18 @@ public class ItemBlockExchanger extends ItemTool {
 
     public static List<ChunkPosition> getNextCubeChunkPositionList(World world, EntityPlayer player, ChunkPosition originPosition, ForgeDirection side, int range, boolean allMode) {
         List<ChunkPosition> list = new ArrayList<>();
-        int basePositionX = originPosition.chunkPosX + side.offsetX;
-        int basePositionY = originPosition.chunkPosY + side.offsetY;
-        int basePositionZ = originPosition.chunkPosZ + side.offsetZ;
-        int dx = 1 - Math.abs(side.offsetX);
-        int dy = 1 - Math.abs(side.offsetY);
-        int dz = 1 - Math.abs(side.offsetZ);
-        int dx1 = 1 - Math.abs(side.offsetZ);
-        int dy1 = 1 - Math.abs(side.offsetY);
-        int dz1 = 1 - Math.abs(side.offsetX);
+        int offsetX = side.offsetX;
+        int offsetY = side.offsetY;
+        int offsetZ = side.offsetZ;
+        int basePositionX = originPosition.chunkPosX + offsetX;
+        int basePositionY = originPosition.chunkPosY + offsetY;
+        int basePositionZ = originPosition.chunkPosZ + offsetZ;
+        int dx = 1 - Math.abs(offsetX);
+        int dy = 1 - Math.abs(offsetY);
+        int dz = 1 - Math.abs(offsetZ);
+        int dx1 = 1 - Math.abs(offsetZ);
+        int dy1 = 1 - Math.abs(offsetY);
+        int dz1 = 1 - Math.abs(offsetX);
 
         int start = 0;
         int end = range * 2;
@@ -233,6 +241,8 @@ public class ItemBlockExchanger extends ItemTool {
             if (centerDifX < 0.5D && centerDifZ < 0.5D) {
                 start = -range;
                 end = range;
+                offsetX = offsetY;
+                offsetY = 0;
             }
         } else {
             dx1 = dz1 = 0;
@@ -242,9 +252,9 @@ public class ItemBlockExchanger extends ItemTool {
         for (int axis0 = start; axis0 <= end; axis0++) {
             for (int axis1 = start; axis1 <= end; axis1++) {
                 for (int axis2 = -range; axis2 <= range; axis2++) {
-                    int x1 = basePositionX + side.offsetX * axis1 + dx * axis2 + dx1 * axis0;
-                    int y1 = basePositionY + side.offsetY * axis1 + dy * axis2 + dy1 * axis0;
-                    int z1 = basePositionZ + side.offsetZ * axis1 + dz * axis2 + dz1 * axis0;
+                    int x1 = basePositionX + offsetX * axis1 + dx * axis2 + dx1 * axis0;
+                    int y1 = basePositionY + offsetY * axis1 + dy * axis2 + dy1 * axis0;
+                    int z1 = basePositionZ + offsetZ * axis1 + dz * axis2 + dz1 * axis0;
                     if (world.getBlock(x1, y1, z1) == Blocks.air || allMode) {
                         list.add(new ChunkPosition(x1, y1, z1));
                     }
