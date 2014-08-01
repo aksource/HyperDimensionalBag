@@ -2,6 +2,7 @@ package ak.HyperDimensionalBag;
 
 import ak.HyperDimensionalBag.item.ItemBlockExchanger;
 import ak.HyperDimensionalBag.item.ItemHDBag;
+import ak.HyperDimensionalBag.network.PacketHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
@@ -56,6 +57,8 @@ public class HyperDimensionalBag
 		GameRegistry.registerItem(HDBag, "hyperdimentionalbag");
         itemBlockExchanger = new ItemBlockExchanger().setUnlocalizedName(TextureDomain + "BlockExchanger").setTextureName(TextureDomain + "BlockExchanger").setCreativeTab(CreativeTabs.tabTools);
         GameRegistry.registerItem(itemBlockExchanger, "itemblockexchanger");
+
+        PacketHandler.init();
 	}
 	@Mod.EventHandler
 	public void load(FMLInitializationEvent event)

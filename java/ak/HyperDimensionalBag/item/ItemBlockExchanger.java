@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 
 import ak.HyperDimensionalBag.HyperDimensionalBag;
+import ak.HyperDimensionalBag.network.MessageKeyPressed;
+import ak.HyperDimensionalBag.network.PacketHandler;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
@@ -22,6 +24,8 @@ import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import org.lwjgl.input.Keyboard;
+
+import javax.swing.text.html.parser.Entity;
 
 public class ItemBlockExchanger extends ItemTool {
 
@@ -75,9 +79,15 @@ public class ItemBlockExchanger extends ItemTool {
 
 	@Override
 	public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer player) {
-		if(world.isRemote) return itemStack;
+		if(world.isRemote) {
+            PacketHandler.INSTANCE.sendToServer(new MessageKeyPressed(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)));
+            return itemStack;
+        }
+		return itemStack;
+	}
 
-		if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
+    public static void onRightClickAction(ItemStack itemStack, EntityPlayer player, boolean keyPressed) {
+        if(keyPressed) {
             if (player.isSneaking()) {
                 setAllExchangeMode(itemStack, !isAllExchangeMode(itemStack));
                 String allExchangeMode = String.format("All Exchange Mode : %b", isAllExchangeMode(itemStack));
@@ -92,14 +102,13 @@ public class ItemBlockExchanger extends ItemTool {
         } else {
             int nowRange = getRange(itemStack);
             int var1 = (player.isSneaking())? -1 : 1 ;
-			nowRange += var1;
-			setRange(itemStack, nowRange);
-			int range = 1 + getRange(itemStack) * 2;
-			String blockRange = String.format("Range : %d*%d", range, range);
-			player.addChatMessage(new ChatComponentText(blockRange));
-		}
-		return itemStack;
-	}
+            nowRange += var1;
+            setRange(itemStack, nowRange);
+            int range = 1 + getRange(itemStack) * 2;
+            String blockRange = String.format("Range : %d*%d", range, range);
+            player.addChatMessage(new ChatComponentText(blockRange));
+        }
+    }
 
 	@Override
     @SuppressWarnings("unchecked")
