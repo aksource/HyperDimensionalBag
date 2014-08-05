@@ -1,9 +1,5 @@
 package ak.HyperDimensionalBag.item;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-
 import ak.HyperDimensionalBag.HyperDimensionalBag;
 import ak.HyperDimensionalBag.network.MessageKeyPressed;
 import ak.HyperDimensionalBag.network.PacketHandler;
@@ -25,7 +21,9 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import org.lwjgl.input.Keyboard;
 
-import javax.swing.text.html.parser.Entity;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 public class ItemBlockExchanger extends ItemTool {
 

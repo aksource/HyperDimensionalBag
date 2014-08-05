@@ -1,9 +1,9 @@
 package ak.HyperDimensionalBag.item;
 
-import java.util.List;
-
 import ak.HyperDimensionalBag.HyperDimensionalBag;
 import ak.HyperDimensionalBag.inventory.BagData;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -12,8 +12,8 @@ import net.minecraft.item.ItemDye;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+
+import java.util.List;
 
 public class ItemHDBag extends Item{
 	public BagData data;
