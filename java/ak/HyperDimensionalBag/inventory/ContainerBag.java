@@ -1,7 +1,6 @@
 package ak.HyperDimensionalBag.inventory;
 
 import ak.HyperDimensionalBag.item.ItemHDBag;
-import invtweaks.api.container.ChestContainer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
@@ -9,22 +8,22 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
-@ChestContainer
+//@ChestContainer
 public class ContainerBag extends Container
 {
 	IInventory BagInv;
 	int metadmg;
-	public ContainerBag(InventoryPlayer invPlayer, IInventory inv, int meta)
+	public ContainerBag(EntityPlayer player, IInventory inv, int meta)
 	{
 		BagInv = inv;
 		metadmg = meta;
-		inv.openInventory();
+		inv.openInventory(player);
 		for(int i = 0;i<6;i++){
 			for(int j = 0;j<9;j++){
 				this.addSlotToContainer(new SlotBag(inv, j + i * 9, 8 + j * 18, 14 + i * 18));
 			}
 		}
-		bindPlayerInventory(invPlayer);
+		bindPlayerInventory(player.inventory);
 	}
 	protected void bindPlayerInventory(InventoryPlayer inventoryPlayer) {
 		for (int i = 0; i < 3; i++) {

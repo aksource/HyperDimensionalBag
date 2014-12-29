@@ -4,6 +4,7 @@ import ak.HyperDimensionalBag.item.ItemHDBag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 
 public class InventoryBag implements IInventory{
@@ -66,7 +67,7 @@ public class InventoryBag implements IInventory{
     }
 
     @Override
-    public String getInventoryName() {
+    public String getName() {
         return "HDBag";
     }
 
@@ -86,19 +87,44 @@ public class InventoryBag implements IInventory{
     }
 
     @Override
-    public void openInventory() {}
+    public void openInventory(EntityPlayer player) {}
 
     @Override
-    public void closeInventory() {
+    public void closeInventory(EntityPlayer player) {
         this.markDirty();
     }
 
     @Override
-    public boolean hasCustomInventoryName() {
+    public boolean hasCustomName() {
         return false;
     }
     @Override
     public boolean isItemValidForSlot(int i, ItemStack itemstack) {
         return !(itemstack.getItem() instanceof ItemHDBag);
+    }
+
+    @Override
+    public int getField(int id) {
+        return 0;
+    }
+
+    @Override
+    public void setField(int id, int value) {
+
+    }
+
+    @Override
+    public int getFieldCount() {
+        return 0;
+    }
+
+    @Override
+    public void clear() {
+
+    }
+
+    @Override
+    public IChatComponent getDisplayName() {
+        return null;
     }
 }

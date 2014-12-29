@@ -2,8 +2,8 @@ package ak.HyperDimensionalBag.item;
 
 import ak.HyperDimensionalBag.HyperDimensionalBag;
 import ak.HyperDimensionalBag.inventory.BagData;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -32,7 +32,7 @@ public class ItemHDBag extends Item{
     public int getColorFromItemStack(ItemStack item, int renderpass)
     {
     	int meta = MathHelper.clamp_int(item.getItemDamage(), 0, 15);
-        return ItemDye.field_150922_c[meta];
+        return ItemDye.dyeColors[meta];
     }
     @SideOnly(Side.CLIENT)
     @Override

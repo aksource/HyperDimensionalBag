@@ -3,8 +3,9 @@ package ak.HyperDimensionalBag.item;
 import ak.HyperDimensionalBag.HyperDimensionalBag;
 import ak.HyperDimensionalBag.network.MessageKeyPressed;
 import ak.HyperDimensionalBag.network.PacketHandler;
-import cpw.mods.fml.common.registry.GameRegistry;
+import mods.storagebox.ItemStorageBox;
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -13,12 +14,13 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.storagebox.ItemStorageBox;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
-import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import org.lwjgl.input.Keyboard;
 
 import java.util.ArrayList;
@@ -34,17 +36,17 @@ public class ItemBlockExchanger extends ItemTool {
 	}
 
 	@Override
-	public boolean onItemUse(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, World par3World, int x, int y, int z, int side, float par8, float par9, float par10) {
+	public boolean onItemUse(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, World par3World, BlockPos blockPos, EnumFacing side, float par8, float par9, float par10) {
 //		if(par3World.isRemote) return false;
-		Block blockId = par3World.getBlock(x, y, z);
-		int blockMeta = par3World.getBlockMetadata(x, y, z);
+        IBlockState state = par3World.getBlockState(blockPos);
+		int blockMeta = state.getBlock().getMetaFromState(state);
 		Block targetId = getTargetBlock(par1ItemStack);
-		ItemStack targetBlockStack = new ItemStack(blockId, 1, blockMeta);
+		ItemStack targetBlockStack = new ItemStack(state.getBlock(), 1, blockMeta);
 		if(targetId == null || targetId == Blocks.air || par2EntityPlayer.isSneaking()) {
-			setTargetBlock(par1ItemStack, blockId);
-			setTargetBlockMeta(par1ItemStack, blockMeta);
+			setTargetBlock(par1ItemStack, state.getBlock());
+			setTargetItemStackMeta(par1ItemStack, blockMeta);
 			if(!par3World.isRemote) {
-				String registerBlock = String.format("Register block : %s", targetBlockStack.getDisplayName());
+				String registerBlock = String.format("Register block : %s", state.getBlock().getLocalizedName());
 				par2EntityPlayer.addChatMessage(new ChatComponentText(registerBlock));
 			}
             return true;
@@ -52,25 +54,25 @@ public class ItemBlockExchanger extends ItemTool {
         int mode = getBuildMode(par1ItemStack);
         if (EnumBuildMode.getMode(mode) == EnumBuildMode.exchange) {
 			//とりあえず、同種のブロックの繋がりを置換。
-			searchExchangeableBlock(par3World, par2EntityPlayer, targetBlockStack, new ChunkPosition(x, y, z), new ChunkPosition(x, y, z), ForgeDirection.VALID_DIRECTIONS[side], ForgeDirection.VALID_DIRECTIONS[side], par1ItemStack);
+			searchExchangeableBlock(par3World, par2EntityPlayer, targetBlockStack, blockPos, blockPos, side, side, par1ItemStack);
 			getDroppedBlock(par3World, par2EntityPlayer);
 		}
-        List<ChunkPosition> chunkPositionList;
+        List<BlockPos> blockPosList;
         boolean allMode = isAllExchangeMode(par1ItemStack);
         int range = getRange(par1ItemStack);
         if (EnumBuildMode.getMode(mode) == EnumBuildMode.wall) {
-            chunkPositionList = getNextWallChunkPositionList(par3World, par2EntityPlayer, new ChunkPosition(x, y, z), ForgeDirection.VALID_DIRECTIONS[side], range, allMode);
-            putBlockToChunkPositionList(par3World, par2EntityPlayer, chunkPositionList, par1ItemStack, targetBlockStack, allMode);
+            blockPosList = getNextWallBlockPosList(par3World, par2EntityPlayer, blockPos, side, range, allMode);
+            putBlockToBlockPosList(par3World, par2EntityPlayer, blockPosList, par1ItemStack, targetBlockStack, allMode);
         }
 
         if (EnumBuildMode.getMode(mode) == EnumBuildMode.pillar) {
-            chunkPositionList = getNextPillarChunkPositionList(par3World, new ChunkPosition(x, y, z), ForgeDirection.VALID_DIRECTIONS[side], range, allMode);
-            putBlockToChunkPositionList(par3World, par2EntityPlayer, chunkPositionList, par1ItemStack, targetBlockStack, allMode);
+            blockPosList = getNextPillarBlockPosList(par3World, blockPos, side, range, allMode);
+            putBlockToBlockPosList(par3World, par2EntityPlayer, blockPosList, par1ItemStack, targetBlockStack, allMode);
         }
 
         if (EnumBuildMode.getMode(mode) == EnumBuildMode.cube) {
-            chunkPositionList = getNextCubeChunkPositionList(par3World, par2EntityPlayer, new ChunkPosition(x, y, z), ForgeDirection.VALID_DIRECTIONS[side], range, allMode);
-            putBlockToChunkPositionList(par3World, par2EntityPlayer, chunkPositionList, par1ItemStack, targetBlockStack, allMode);
+            blockPosList = getNextCubeBlockPosList(par3World, par2EntityPlayer, blockPos, side, range, allMode);
+            putBlockToBlockPosList(par3World, par2EntityPlayer, blockPosList, par1ItemStack, targetBlockStack, allMode);
         }
         return true;
 	}
@@ -114,7 +116,7 @@ public class ItemBlockExchanger extends ItemTool {
 		int range = 1 + getRange(par1ItemStack) * 2;
 		String blockRange = String.format("Range : %d*%d", range, range);
 		Block block = getTargetBlock(par1ItemStack);
-		int meta = getTargetBlockMeta(par1ItemStack);
+		int meta = getTargetItemStackMeta(par1ItemStack);
         String blockName;
 		if (block != null) {
 			ItemStack targetBlockStack = new ItemStack(block, 1, meta);
@@ -131,12 +133,12 @@ public class ItemBlockExchanger extends ItemTool {
 
 	private void getDroppedBlock(World world, EntityPlayer player) {
         @SuppressWarnings("unchecked")
-		List<EntityItem> list = world.getEntitiesWithinAABB(EntityItem.class, player.boundingBox.expand(5d, 5d, 5d));
+		List<EntityItem> list = world.getEntitiesWithinAABB(EntityItem.class, player.getEntityBoundingBox().expand(5d, 5d, 5d));
 		if (list == null) return;
 		double d0, d1, d2;
 		float f1 = player.rotationYaw * 0.01745329F;
 		for (EntityItem eItem : list) {
-			eItem.delayBeforeCanPickup = 0;
+			eItem.setNoPickupDelay();
 			d0 = player.posX - MathHelper.sin(f1) * 0.5D;
 			d1 = player.posY;
 			d2 = player.posZ + MathHelper.cos(f1) * 0.5D;
@@ -144,35 +146,36 @@ public class ItemBlockExchanger extends ItemTool {
 		}
 	}
 	
-	private void searchExchangeableBlock(World world, EntityPlayer player, ItemStack blockStack, ChunkPosition chunkpos, ChunkPosition origin, ForgeDirection face, ForgeDirection originFace, ItemStack heldItem) {
-		if(!isVisibleBlock(world, getNextChunkPosition(chunkpos, originFace)) || !hasTargetBlock(heldItem, player) || !exchangeBlock(world, player, heldItem, chunkpos, blockStack)) return;
-		for (ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
-			if(face.equals(direction) || originFace.equals(direction) || originFace.getOpposite().equals(direction)) continue;
-			ChunkPosition newPos = getNextChunkPosition(chunkpos, direction);
+	private void searchExchangeableBlock(World world, EntityPlayer player, ItemStack blockStack, BlockPos chunkpos, BlockPos origin, EnumFacing face, EnumFacing originFace, ItemStack heldItem) {
+		if(!isVisibleBlock(world, getNextBlockPos(chunkpos, originFace)) || !hasTargetBlock(heldItem, player, chunkpos) || !exchangeBlock(world, player, heldItem, chunkpos, blockStack)) return;
+		for (EnumFacing enumFacing : EnumFacing.values()) {
+			if(face.equals(enumFacing) || originFace.equals(enumFacing) || originFace.getOpposite().equals(enumFacing)) continue;
+			BlockPos newPos = getNextBlockPos(chunkpos, enumFacing);
 			if (checkBlockInRange(heldItem, newPos, origin)) {
-				searchExchangeableBlock(world, player, blockStack, newPos, origin, direction.getOpposite(), originFace, heldItem);
+				searchExchangeableBlock(world, player, blockStack, newPos, origin, enumFacing.getOpposite(), originFace, heldItem);
 			}
 		}
 	}
 
-    public static List<ChunkPosition> getNextWallChunkPositionList(World world, EntityPlayer player, ChunkPosition originPosition, ForgeDirection side, int range, boolean allMode) {
-        List<ChunkPosition> list = new ArrayList<>();
-        int offsetX = side.offsetX;
-        int offsetY = side.offsetY;
-        int offsetZ = side.offsetZ;
-        int basePositionX = originPosition.chunkPosX + offsetX;
-        int basePositionY = originPosition.chunkPosY + offsetY;
-        int basePositionZ = originPosition.chunkPosZ + offsetZ;
-        int dx = 1 - Math.abs(offsetX);
-        int dy = 1 - Math.abs(offsetY);
-        int dz = 1 - Math.abs(offsetZ);
+    public static List<BlockPos> getNextWallBlockPosList(World world, EntityPlayer player, BlockPos originPosition, EnumFacing side, int range, boolean allMode) {
+        List<BlockPos> list = new ArrayList<>();
+        BlockPos blockPos = originPosition.offset(side);
+        int offsetX = side.getFrontOffsetX();
+        int offsetY = side.getFrontOffsetY();
+        int offsetZ = side.getFrontOffsetZ();
+//        int basePositionX = originPosition.chunkPosX + offsetX;
+//        int basePositionY = originPosition.chunkPosY + offsetY;
+//        int basePositionZ = originPosition.chunkPosZ + offsetZ;
+        int dx = 1 - Math.abs(side.getFrontOffsetX());
+        int dy = 1 - Math.abs(side.getFrontOffsetY());
+        int dz = 1 - Math.abs(side.getFrontOffsetZ());
 
         int start = 0;
         int end = range * 2;
-        if (side == ForgeDirection.DOWN || side == ForgeDirection.UP) {
-            double centerDifX = Math.abs(originPosition.chunkPosX + 0.5D - player.posX);
+        if (side == EnumFacing.DOWN || side == EnumFacing.UP) {
+            double centerDifX = Math.abs(originPosition.getX() + 0.5D - player.posX);
             //double baseCenterY = originPosition.chunkPosY + 0.5D;
-            double centerDifZ = Math.abs(originPosition.chunkPosZ + 0.5D - player.posZ);
+            double centerDifZ = Math.abs(originPosition.getZ() + 0.5D - player.posZ);
 
             if (centerDifX < centerDifZ) dz = 0;
             else dx = 0;
@@ -186,45 +189,43 @@ public class ItemBlockExchanger extends ItemTool {
         } else {
             dy = 0;
         }
-
+        BlockPos blockPos1;
         for (int axis1 = start; axis1 <= end; axis1++) {
             for (int axis2 = -range; axis2 <= range; axis2++) {
-                int x1 = basePositionX + offsetX * axis1 + dx * axis2;
-                int y1 = basePositionY + offsetY * axis1 + dy * axis2;
-                int z1 = basePositionZ + offsetZ * axis1 + dz * axis2;
-                if (world.getBlock(x1, y1, z1) == Blocks.air || allMode) {
-                    list.add(new ChunkPosition(x1, y1, z1));
+                blockPos1 = blockPos.offset(side).add(offsetX * axis1, offsetY * axis1, offsetZ * axis1).add(dx * axis2, dy * axis2, dz * axis2);
+//                int x1 = basePositionX + offsetX * axis1 + dx * axis2;
+//                int y1 = basePositionY + offsetY * axis1 + dy * axis2;
+//                int z1 = basePositionZ + offsetZ * axis1 + dz * axis2;
+                if (world.getBlockState(blockPos1).getBlock() == Blocks.air || allMode) {
+                    list.add(blockPos1);
                 }
             }
         }
         return list;
     }
 
-    public static List<ChunkPosition> getNextPillarChunkPositionList(World world, ChunkPosition originPosition, ForgeDirection side, int range, boolean allMode) {
-        List<ChunkPosition> list = new ArrayList<>();
-        int basePositionX = originPosition.chunkPosX + side.offsetX;
-        int basePositionY = originPosition.chunkPosY + side.offsetY;
-        int basePositionZ = originPosition.chunkPosZ + side.offsetZ;
+    public static List<BlockPos> getNextPillarBlockPosList(World world, BlockPos originPosition, EnumFacing side, int range, boolean allMode) {
+        List<BlockPos> list = new ArrayList<>();
+        BlockPos blockPos = originPosition.offset(side);
 
         for (int axis1 = 0; axis1 <= range * 2; axis1++) {
-            int x1 = basePositionX + side.offsetX * axis1;
-            int y1 = basePositionY + side.offsetY * axis1;
-            int z1 = basePositionZ + side.offsetZ * axis1;
-            if (world.getBlock(x1, y1, z1) == Blocks.air || allMode) {
-                list.add(new ChunkPosition(x1, y1, z1));
+            BlockPos blockPos1 = blockPos.offset(side, axis1);
+            if (world.getBlockState(blockPos1) == Blocks.air || allMode) {
+                list.add(new BlockPos(blockPos1));
             }
         }
         return list;
     }
 
-    public static List<ChunkPosition> getNextCubeChunkPositionList(World world, EntityPlayer player, ChunkPosition originPosition, ForgeDirection side, int range, boolean allMode) {
-        List<ChunkPosition> list = new ArrayList<>();
-        int offsetX = side.offsetX;
-        int offsetY = side.offsetY;
-        int offsetZ = side.offsetZ;
-        int basePositionX = originPosition.chunkPosX + offsetX;
-        int basePositionY = originPosition.chunkPosY + offsetY;
-        int basePositionZ = originPosition.chunkPosZ + offsetZ;
+    public static List<BlockPos> getNextCubeBlockPosList(World world, EntityPlayer player, BlockPos originPosition, EnumFacing side, int range, boolean allMode) {
+        List<BlockPos> list = new ArrayList<>();
+        BlockPos blockPos = originPosition.offset(side);
+        int offsetX = side.getFrontOffsetX();
+        int offsetY = side.getFrontOffsetY();
+        int offsetZ = side.getFrontOffsetZ();
+//        int basePositionX = originPosition.chunkPosX + offsetX;
+//        int basePositionY = originPosition.chunkPosY + offsetY;
+//        int basePositionZ = originPosition.chunkPosZ + offsetZ;
         int dx = 1 - Math.abs(offsetX);
         int dy = 1 - Math.abs(offsetY);
         int dz = 1 - Math.abs(offsetZ);
@@ -234,10 +235,10 @@ public class ItemBlockExchanger extends ItemTool {
 
         int start = 0;
         int end = range * 2;
-        if (side == ForgeDirection.DOWN || side == ForgeDirection.UP) {
-            double centerDifX = Math.abs(originPosition.chunkPosX + 0.5D - player.posX);
+        if (side == EnumFacing.DOWN || side == EnumFacing.UP) {
+            double centerDifX = Math.abs(originPosition.getX() + 0.5D - player.posX);
             //double baseCenterY = originPosition.chunkPosY + 0.5D;
-            double centerDifZ = Math.abs(originPosition.chunkPosZ + 0.5D - player.posZ);
+            double centerDifZ = Math.abs(originPosition.getZ() + 0.5D - player.posZ);
 
             if (centerDifX < centerDifZ) {
                 dz = dx1 = 0;
@@ -256,14 +257,16 @@ public class ItemBlockExchanger extends ItemTool {
             dy = 0;
         }
 
+        BlockPos blockPos1;
         for (int axis0 = start; axis0 <= end; axis0++) {
             for (int axis1 = start; axis1 <= end; axis1++) {
                 for (int axis2 = -range; axis2 <= range; axis2++) {
-                    int x1 = basePositionX + offsetX * axis1 + dx * axis2 + dx1 * axis0;
-                    int y1 = basePositionY + offsetY * axis1 + dy * axis2 + dy1 * axis0;
-                    int z1 = basePositionZ + offsetZ * axis1 + dz * axis2 + dz1 * axis0;
-                    if (world.getBlock(x1, y1, z1) == Blocks.air || allMode) {
-                        list.add(new ChunkPosition(x1, y1, z1));
+                    blockPos1 = blockPos.offset(side).add(offsetX * axis1, offsetY * axis1, offsetZ * axis1).add(dx * axis2, dy * axis2, dz * axis2).add(dx1 * axis0, dy1 * axis0, dz1 * axis0);
+//                    int x1 = basePositionX + offsetX * axis1 + dx * axis2 + dx1 * axis0;
+//                    int y1 = basePositionY + offsetY * axis1 + dy * axis2 + dy1 * axis0;
+//                    int z1 = basePositionZ + offsetZ * axis1 + dz * axis2 + dz1 * axis0;
+                    if (world.getBlockState(blockPos1).getBlock() == Blocks.air || allMode) {
+                        list.add(new BlockPos(blockPos1));
                     }
                 }
             }
@@ -271,77 +274,80 @@ public class ItemBlockExchanger extends ItemTool {
         return list;
     }
 
-    private static void putBlockToChunkPositionList(World world, EntityPlayer player, List<ChunkPosition> list, ItemStack exchangeItem, ItemStack target, boolean allMode) {
-        for (ChunkPosition chunkPosition : list) {
-            int x = chunkPosition.chunkPosX;
-            int y = chunkPosition.chunkPosY;
-            int z = chunkPosition.chunkPosZ;
-            Block block = world.getBlock(x, y, z);
-            int meta = world.getBlockMetadata(x, y, z);
+    private static void putBlockToBlockPosList(World world, EntityPlayer player, List<BlockPos> list, ItemStack exchangeItem, ItemStack target, boolean allMode) {
+        for (BlockPos blockPos : list) {
+//            int x = blockPos.chunkPosX;
+//            int y = blockPos.chunkPosY;
+//            int z = blockPos.chunkPosZ;
+            IBlockState state = world.getBlockState(blockPos);
+            Block block = state.getBlock();
+            int meta = block.getMetaFromState(state);
             ItemStack nowBlock = new ItemStack(block, 1, meta);
             if (target.isItemEqual(nowBlock) || (block != Blocks.air && !allMode)) continue;
 
-            if (decreaseBlockFromInventory(exchangeItem, player)) {
+            if (decreaseBlockFromInventory(exchangeItem, player, blockPos)) {
                 Block targetBlock = getTargetBlock(exchangeItem);
-                int targetMeta = getTargetBlockMeta(exchangeItem);
-                world.setBlock(x, y, z, targetBlock, targetMeta, 3);
+                int targetMeta = getTargetItemStackMeta(exchangeItem);
+                IBlockState targetState = targetBlock.getStateFromMeta(targetMeta);
+                world.setBlockState(blockPos, targetState, 3);
                 if (block != Blocks.air) {
-                    block.onBlockHarvested(world, x, y, z, meta, player);
-                    block.onBlockDestroyedByPlayer(world, x, y, z, meta);
-                    if(!player.capabilities.isCreativeMode)
-                        block.harvestBlock(world, player, MathHelper.ceiling_double_int( player.posX), MathHelper.ceiling_double_int( player.posY), MathHelper.ceiling_double_int( player.posZ), meta);
-
+                    block.onBlockHarvested(world, blockPos, targetState, player);
+                    block.onBlockDestroyedByPlayer(world, blockPos, targetState);
+                    if(!player.capabilities.isCreativeMode) {
+                        TileEntity tile = world.getTileEntity(blockPos);
+                        block.harvestBlock(world, player, new BlockPos(player.posX, player.posY, player.posZ), state, tile);
+                    }
                 }
             }
         }
     }
 
-	public static ChunkPosition getNextChunkPosition(ChunkPosition chunk, ForgeDirection side)
-	{
-		int dx = side.offsetX;
-		int dy = side.offsetY;
-		int dz = side.offsetZ;
-		return new ChunkPosition(chunk.chunkPosX + dx,chunk.chunkPosY + dy,chunk.chunkPosZ + dz);
+	public static BlockPos getNextBlockPos(BlockPos pos, EnumFacing side) {
+		return new BlockPos(pos).offset(side);
 	}
 	
-	public static  boolean checkBlockInRange(ItemStack item, ChunkPosition check, ChunkPosition origin) {
-		return Math.abs(check.chunkPosX - origin.chunkPosX) <= getRange(item) && Math.abs(check.chunkPosY - origin.chunkPosY) <= getRange(item) && Math.abs(check.chunkPosZ - origin.chunkPosZ) <= getRange(item);
+	public static  boolean checkBlockInRange(ItemStack item, BlockPos check, BlockPos origin) {
+		return Math.abs(check.getX() - origin.getX()) <= getRange(item) && Math.abs(check.getY() - origin.getY()) <= getRange(item) && Math.abs(check.getZ() - origin.getZ()) <= getRange(item);
 	}
 	
-	public static  boolean isVisibleBlock(World world, ChunkPosition chunk) {
-		return HyperDimensionalBag.exchangeInvisibleBlock || world.getBlock(chunk.chunkPosX, chunk.chunkPosY, chunk.chunkPosZ) == Blocks.air || !world.getBlock(chunk.chunkPosX, chunk.chunkPosY, chunk.chunkPosZ).isOpaqueCube();
+	public static  boolean isVisibleBlock(World world, BlockPos pos) {
+		return HyperDimensionalBag.exchangeInvisibleBlock || world.getBlockState(pos).getBlock() == Blocks.air || !world.getBlockState(pos).getBlock().isOpaqueCube();
 	}
 	
-	private static boolean exchangeBlock(World world, EntityPlayer player, ItemStack item, ChunkPosition chunk, ItemStack firstFocusBlock) {
-		Block block = world.getBlock(chunk.chunkPosX, chunk.chunkPosY, chunk.chunkPosZ);
+	private static boolean exchangeBlock(World world, EntityPlayer player, ItemStack item, BlockPos pos, ItemStack firstFocusBlock) {
+        IBlockState state = world.getBlockState(pos);
+        Block block = state.getBlock();
 		if(block == Blocks.air) return false;
-		int meta = world.getBlockMetadata(chunk.chunkPosX, chunk.chunkPosY, chunk.chunkPosZ);
+		int meta = block.getMetaFromState(state);
 		ItemStack nowBlock = new ItemStack(block, 1, meta);
 		Block targetBlock = getTargetBlock(item);
-		int targetBlockMeta = getTargetBlockMeta(item);
+		int targetBlockMeta = getTargetItemStackMeta(item);
         ItemStack targetBlockStack = new ItemStack(targetBlock, 1, targetBlockMeta);
+        IBlockState targetState = targetBlock.getStateFromMeta(targetBlockMeta);
 		if(targetBlockStack.isItemEqual(nowBlock) || (!isAllExchangeMode(item) && !firstFocusBlock.isItemEqual(nowBlock))) return false;
-		if(decreaseBlockFromInventory(item, player) && world.setBlock(chunk.chunkPosX, chunk.chunkPosY, chunk.chunkPosZ, targetBlock, targetBlockMeta, 3)){
-			block.onBlockHarvested(world, chunk.chunkPosX, chunk.chunkPosY, chunk.chunkPosZ, meta, player);
-			block.onBlockDestroyedByPlayer(world,chunk.chunkPosX, chunk.chunkPosY, chunk.chunkPosZ, meta);
-			if(!player.capabilities.isCreativeMode)
-				block.harvestBlock(world, player, MathHelper.ceiling_double_int( player.posX), MathHelper.ceiling_double_int( player.posY), MathHelper.ceiling_double_int( player.posZ), meta);
+		if(decreaseBlockFromInventory(item, player, pos) && world.setBlockState(pos, targetState, 3)){
+			block.onBlockHarvested(world, pos, state, player);
+			block.onBlockDestroyedByPlayer(world,pos, state);
+			if(!player.capabilities.isCreativeMode) {
+                TileEntity tile = world.getTileEntity(pos);
+                block.harvestBlock(world, player, new BlockPos(player.posX, player.posY, player.posZ), state, tile);
+            }
 			return true;
 		} else return false;
 	}
 	
-	private static boolean decreaseBlockFromInventory(ItemStack exchangeItem, EntityPlayer player) {
+	private static boolean decreaseBlockFromInventory(ItemStack exchangeItem, EntityPlayer player, BlockPos pos) {
 		if (player.capabilities.isCreativeMode) return true;
 		InventoryPlayer inv = player.inventory;
-		ItemStack targetBlockStack = new ItemStack(getTargetBlock(exchangeItem), 1, getTargetBlockMeta(exchangeItem));
+		ItemStack targetBlockStack = new ItemStack(getTargetBlock(exchangeItem), 1, getTargetItemStackMeta(exchangeItem));
         for(int i = 0; i < inv.getSizeInventory();i++) {
             ItemStack item = inv.getStackInSlot(i);
             if (item == null) continue;
-            if (checkValidBlock(player.worldObj, targetBlockStack, item)) {
+            if (checkValidBlock(player.worldObj, pos, targetBlockStack, item)) {
                 item.stackSize--;
                 if(item.stackSize == 0) inv.setInventorySlotContents(i, null);
                 return true;
-            } else if (HyperDimensionalBag.loadSB && item.getItem() instanceof ItemStorageBox && ItemStorageBox.peekItemStackAll(item) != null && checkValidBlock(player.worldObj, targetBlockStack, ItemStorageBox.peekItemStackAll(item)) && ItemStorageBox.peekItemStackAll(item).stackSize > 1) {
+            } else if (HyperDimensionalBag.loadSB && item.getItem() instanceof ItemStorageBox && ItemStorageBox.peekItemStackAll(item) != null && checkValidBlock(player.worldObj, pos, targetBlockStack, ItemStorageBox.peekItemStackAll(item)) && ItemStorageBox.peekItemStackAll(item).stackSize > 1) {
                 ItemStack copy = ItemStorageBox.peekItemStack(item);
                 copy.stackSize = 1;
                 ItemStorageBox.removeItemStack(item, copy);
@@ -351,27 +357,27 @@ public class ItemBlockExchanger extends ItemTool {
 		return false;
 	}
 	
-	private boolean hasTargetBlock(ItemStack exchangeItem, EntityPlayer player) {
+	private boolean hasTargetBlock(ItemStack exchangeItem, EntityPlayer player, BlockPos pos) {
 		if (player.capabilities.isCreativeMode) return true;
 		InventoryPlayer inv = player.inventory;
-		ItemStack targetBlockStack = new ItemStack(getTargetBlock(exchangeItem), 1, getTargetBlockMeta(exchangeItem));
+		ItemStack targetBlockStack = new ItemStack(getTargetBlock(exchangeItem), 1, getTargetItemStackMeta(exchangeItem));
 		for(ItemStack item : inv.mainInventory) {
             if(item == null) continue;
-            if (checkValidBlock(player.worldObj, targetBlockStack, item)) return true;
-			else if (HyperDimensionalBag.loadSB && item.getItem() instanceof ItemStorageBox && ItemStorageBox.peekItemStackAll(item) != null && checkValidBlock(player.worldObj, targetBlockStack, ItemStorageBox.peekItemStackAll(item)) && ItemStorageBox.peekItemStackAll(item).stackSize > 1) {
+            if (checkValidBlock(player.worldObj, pos, targetBlockStack, item)) return true;
+			else if (HyperDimensionalBag.loadSB && item.getItem() instanceof ItemStorageBox && ItemStorageBox.peekItemStackAll(item) != null && checkValidBlock(player.worldObj, pos, targetBlockStack, ItemStorageBox.peekItemStackAll(item)) && ItemStorageBox.peekItemStackAll(item).stackSize > 1) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-    private static boolean checkValidBlock(World world, ItemStack target, ItemStack check) {
+    private static boolean checkValidBlock(World world, BlockPos pos, ItemStack target, ItemStack check) {
         if (target.getItem() != check.getItem()) return false;
         else if(!target.getHasSubtypes()) return true;
         else if(target.getItemDamage() == check.getItemDamage()) return true;
         else {
             Block targetBlock = Block.getBlockFromItem(target.getItem());
-            ArrayList<ItemStack> drops = targetBlock.getDrops(world, 0, 0, 0, target.getItemDamage(), 0);
+            List<ItemStack> drops = targetBlock.getDrops(world, pos, world.getBlockState(pos), 0);
             for (ItemStack item : drops) {
                 if(item.getItem() instanceof ItemBlock && item.isItemEqual(check)) return true;
             }
@@ -396,20 +402,22 @@ public class ItemBlockExchanger extends ItemTool {
             return GameRegistry.findBlock(uni.modId, uni.name);
         }
 	}
-	
-	private static void setTargetBlockMeta(ItemStack item, int meta) {
+
+    @Deprecated
+	private static void setTargetItemStackMeta(ItemStack item, int meta) {
 		NBTTagCompound nbt = item.getTagCompound();
 		if (nbt == null) nbt = new NBTTagCompound();
 		nbt.setInteger("HDB|targetBlockMeta", meta);
 		item.setTagCompound(nbt);
 	}
-	
-	public static int getTargetBlockMeta(ItemStack item) {
+
+    @Deprecated
+	public static int getTargetItemStackMeta(ItemStack item) {
 		NBTTagCompound nbt = item.getTagCompound();
 		if (nbt == null) nbt = new NBTTagCompound();
 		return nbt.getInteger("HDB|targetBlockMeta");
 	}
-	
+
 	public static int getRange(ItemStack item) {
 		NBTTagCompound nbt = item.getTagCompound();
 		if (nbt == null) nbt = new NBTTagCompound();

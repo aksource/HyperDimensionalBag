@@ -2,12 +2,12 @@ package ak.HyperDimensionalBag.client;
 
 import ak.HyperDimensionalBag.HyperDimensionalBag;
 import ak.HyperDimensionalBag.inventory.ContainerBag;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
 
 @SideOnly(Side.CLIENT)
@@ -16,9 +16,9 @@ public class GuiBag extends GuiContainer
 	private static final ResourceLocation guiTex = new ResourceLocation(HyperDimensionalBag.Assets, HyperDimensionalBag.GuiBagTex);
 	IInventory bagData;
 	int metaData;
-	public GuiBag(InventoryPlayer inv, IInventory data, int meta)
+	public GuiBag(EntityPlayer player, IInventory data, int meta)
 	{
-		super(new ContainerBag(inv, data, meta));
+		super(new ContainerBag(player, data, meta));
 		bagData = data;
 		metaData = meta;
         short short1 = 222;
