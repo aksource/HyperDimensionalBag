@@ -1,15 +1,14 @@
 package ak.HyperDimensionalBag.client;
 
 import ak.HyperDimensionalBag.CommonProxy;
-import ak.HyperDimensionalBag.item.ItemBlockExchanger;
-import ak.HyperDimensionalBag.item.ItemHDBag;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemModelMesher;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.item.Item;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraftforge.common.MinecraftForge;
+
 import static ak.HyperDimensionalBag.HyperDimensionalBag.*;
 
 @SideOnly(Side.CLIENT)

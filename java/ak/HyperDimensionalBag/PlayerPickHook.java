@@ -2,10 +2,10 @@ package ak.HyperDimensionalBag;
 
 import ak.HyperDimensionalBag.inventory.InventoryBag;
 import ak.HyperDimensionalBag.item.ItemHDBag;
-import mods.storagebox.ItemStorageBox;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.storagebox.ItemStorageBox;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;

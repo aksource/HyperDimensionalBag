@@ -78,6 +78,6 @@ public class HyperDimensionalBag
 	@Mod.EventHandler
 	public void postInit(FMLPostInitializationEvent event)
 	{
-		loadSB = Loader.isModLoaded("net.minecraft.storagebox.mod_StorageBox");
+		loadSB = Loader.isModLoaded("storageBox");
 	}
 }
