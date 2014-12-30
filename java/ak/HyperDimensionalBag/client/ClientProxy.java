@@ -18,12 +18,14 @@ public class ClientProxy extends CommonProxy
 	@Override
 	public void registerClientInfo(){
         MinecraftForge.EVENT_BUS.register(new RenderBlockSelectionBox());
-		registerItemModel(HDBag, "hyperdimentionalbag");
-		registerItemModel(itemBlockExchanger, "itemblockexchanger");
+		for (int i = 0; i < 16; i++) {
+			registerItemModel(HDBag, "hyperdimensionalbag", i);
+		}
+		registerItemModel(itemBlockExchanger, "itemblockexchanger", 0);
 	}
 
-	private void registerItemModel(Item item, String registeredName) {
+	private void registerItemModel(Item item, String registeredName, int damage) {
 		ItemModelMesher itemModelMesher = mc.getRenderItem().getItemModelMesher();
-		itemModelMesher.register(item, 0, new ModelResourceLocation(MOD_ID + ":" + registeredName, "inventory"));
+		itemModelMesher.register(item, damage, new ModelResourceLocation(MOD_ID + ":" + registeredName, "inventory"));
 	}
 }

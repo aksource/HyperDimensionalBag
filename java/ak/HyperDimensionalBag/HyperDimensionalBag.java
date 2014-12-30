@@ -55,7 +55,7 @@ public class HyperDimensionalBag
         exchangeInvisibleBlock = config.get(Configuration.CATEGORY_GENERAL, "exchangeInvisibleBlock", false, "true : exchange invisible block").getBoolean(false);
         config.save();
 		HDBag = new ItemHDBag().setUnlocalizedName(TextureDomain + "Bag").setCreativeTab(CreativeTabs.tabTools);
-		GameRegistry.registerItem(HDBag, "hyperdimentionalbag");
+		GameRegistry.registerItem(HDBag, "hyperdimensionalbag");
         itemBlockExchanger = new ItemBlockExchanger().setUnlocalizedName(TextureDomain + "BlockExchanger").setCreativeTab(CreativeTabs.tabTools);
         GameRegistry.registerItem(itemBlockExchanger, "itemblockexchanger");
 
@@ -78,6 +78,6 @@ public class HyperDimensionalBag
 	@Mod.EventHandler
 	public void postInit(FMLPostInitializationEvent event)
 	{
-		loadSB = Loader.isModLoaded("storageBox");
+		loadSB = Loader.isModLoaded("storagebox");
 	}
 }

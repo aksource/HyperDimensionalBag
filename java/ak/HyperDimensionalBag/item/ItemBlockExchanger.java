@@ -20,6 +20,7 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.registry.GameData;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import org.lwjgl.input.Keyboard;
 
@@ -159,6 +160,7 @@ public class ItemBlockExchanger extends ItemTool {
 
     public static List<BlockPos> getNextWallBlockPosList(World world, EntityPlayer player, BlockPos originPosition, EnumFacing side, int range, boolean allMode) {
         List<BlockPos> list = new ArrayList<>();
+        //ターゲットしたブロックの面に接するブロックの座標
         BlockPos blockPos = originPosition.offset(side);
         int offsetX = side.getFrontOffsetX();
         int offsetY = side.getFrontOffsetY();
@@ -166,9 +168,9 @@ public class ItemBlockExchanger extends ItemTool {
 //        int basePositionX = originPosition.chunkPosX + offsetX;
 //        int basePositionY = originPosition.chunkPosY + offsetY;
 //        int basePositionZ = originPosition.chunkPosZ + offsetZ;
-        int dx = 1 - Math.abs(side.getFrontOffsetX());
-        int dy = 1 - Math.abs(side.getFrontOffsetY());
-        int dz = 1 - Math.abs(side.getFrontOffsetZ());
+        int dx = 1 - Math.abs(offsetX);
+        int dy = 1 - Math.abs(offsetY);
+        int dz = 1 - Math.abs(offsetZ);
 
         int start = 0;
         int end = range * 2;
@@ -192,7 +194,7 @@ public class ItemBlockExchanger extends ItemTool {
         BlockPos blockPos1;
         for (int axis1 = start; axis1 <= end; axis1++) {
             for (int axis2 = -range; axis2 <= range; axis2++) {
-                blockPos1 = blockPos.offset(side).add(offsetX * axis1, offsetY * axis1, offsetZ * axis1).add(dx * axis2, dy * axis2, dz * axis2);
+                blockPos1 = blockPos.add(offsetX * axis1 + dx * axis2, offsetY * axis1 + dy * axis2, offsetZ * axis1 + dz * axis2);
 //                int x1 = basePositionX + offsetX * axis1 + dx * axis2;
 //                int y1 = basePositionY + offsetY * axis1 + dy * axis2;
 //                int z1 = basePositionZ + offsetZ * axis1 + dz * axis2;
@@ -207,11 +209,11 @@ public class ItemBlockExchanger extends ItemTool {
     public static List<BlockPos> getNextPillarBlockPosList(World world, BlockPos originPosition, EnumFacing side, int range, boolean allMode) {
         List<BlockPos> list = new ArrayList<>();
         BlockPos blockPos = originPosition.offset(side);
-
+        BlockPos blockPos1;
         for (int axis1 = 0; axis1 <= range * 2; axis1++) {
-            BlockPos blockPos1 = blockPos.offset(side, axis1);
-            if (world.getBlockState(blockPos1) == Blocks.air || allMode) {
-                list.add(new BlockPos(blockPos1));
+            blockPos1 = blockPos.offset(side, axis1);
+            if (world.getBlockState(blockPos1).getBlock() == Blocks.air || allMode) {
+                list.add(blockPos1);
             }
         }
         return list;
@@ -235,20 +237,34 @@ public class ItemBlockExchanger extends ItemTool {
 
         int start = 0;
         int end = range * 2;
+        int start1 = 0;
+        int end1 = range * 2;
         if (side == EnumFacing.DOWN || side == EnumFacing.UP) {
             double centerDifX = Math.abs(originPosition.getX() + 0.5D - player.posX);
+            double signX = Math.signum(originPosition.getX() + 0.5D - player.posX);
             //double baseCenterY = originPosition.chunkPosY + 0.5D;
             double centerDifZ = Math.abs(originPosition.getZ() + 0.5D - player.posZ);
+            double signZ = Math.signum(originPosition.getZ() + 0.5D - player.posZ);
 
             if (centerDifX < centerDifZ) {
                 dz = dx1 = 0;
+                if (signZ <= 0) {
+                    start1 = - range * 2;
+                    end1 = 0;
+                }
             } else {
                 dx = dz1 = 0;
+                if (signX <= 0) {
+                    start1 = - range * 2;
+                    end1 = 0;
+                }
             }
 
             if (centerDifX < 0.5D && centerDifZ < 0.5D) {
                 start = -range;
                 end = range;
+                start1 = -range;
+                end1 = range;
                 offsetX = offsetY;
                 offsetY = 0;
             }
@@ -258,15 +274,15 @@ public class ItemBlockExchanger extends ItemTool {
         }
 
         BlockPos blockPos1;
-        for (int axis0 = start; axis0 <= end; axis0++) {
+        for (int axis0 = start1; axis0 <= end1; axis0++) {
             for (int axis1 = start; axis1 <= end; axis1++) {
                 for (int axis2 = -range; axis2 <= range; axis2++) {
-                    blockPos1 = blockPos.offset(side).add(offsetX * axis1, offsetY * axis1, offsetZ * axis1).add(dx * axis2, dy * axis2, dz * axis2).add(dx1 * axis0, dy1 * axis0, dz1 * axis0);
+                    blockPos1 = blockPos.add(offsetX * axis1 + dx * axis2 + dx1 * axis0, offsetY * axis1 + dy * axis2 + dy1 * axis0, offsetZ * axis1 + dz * axis2 + dz1 * axis0);
 //                    int x1 = basePositionX + offsetX * axis1 + dx * axis2 + dx1 * axis0;
 //                    int y1 = basePositionY + offsetY * axis1 + dy * axis2 + dy1 * axis0;
 //                    int z1 = basePositionZ + offsetZ * axis1 + dz * axis2 + dz1 * axis0;
                     if (world.getBlockState(blockPos1).getBlock() == Blocks.air || allMode) {
-                        list.add(new BlockPos(blockPos1));
+                        list.add(blockPos1);
                     }
                 }
             }
@@ -386,77 +402,70 @@ public class ItemBlockExchanger extends ItemTool {
     }
 
 	private static void setTargetBlock(ItemStack item, Block block) {
+        if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
 		NBTTagCompound nbt = item.getTagCompound();
-		if (nbt == null) nbt = new NBTTagCompound();
 		nbt.setString("HDB|targetBlockId", GameRegistry.findUniqueIdentifierFor(block).toString());
-		item.setTagCompound(nbt);
 	}
 	
 	public static Block getTargetBlock(ItemStack item) {
+        if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
 		NBTTagCompound nbt = item.getTagCompound();
-		if (nbt == null) nbt = new NBTTagCompound();
         String blockId = nbt.getString("HDB|targetBlockId");
         if(blockId == null || blockId.isEmpty()) return null;
-        else {
-            GameRegistry.UniqueIdentifier uni = new GameRegistry.UniqueIdentifier(blockId);
-            return GameRegistry.findBlock(uni.modId, uni.name);
-        }
+        GameRegistry.UniqueIdentifier uni = new GameRegistry.UniqueIdentifier(blockId);
+        return GameData.getBlockRegistry().getObject(blockId)/*GameRegistry.findBlock(uni.modId, uni.name)*/;
 	}
 
     @Deprecated
 	private static void setTargetItemStackMeta(ItemStack item, int meta) {
+        if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
 		NBTTagCompound nbt = item.getTagCompound();
-		if (nbt == null) nbt = new NBTTagCompound();
 		nbt.setInteger("HDB|targetBlockMeta", meta);
-		item.setTagCompound(nbt);
 	}
 
     @Deprecated
 	public static int getTargetItemStackMeta(ItemStack item) {
+        if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
 		NBTTagCompound nbt = item.getTagCompound();
-		if (nbt == null) nbt = new NBTTagCompound();
 		return nbt.getInteger("HDB|targetBlockMeta");
 	}
 
 	public static int getRange(ItemStack item) {
+        if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
 		NBTTagCompound nbt = item.getTagCompound();
-		if (nbt == null) nbt = new NBTTagCompound();
 		return nbt.getInteger("HDB|blockRange");
 	}
 	
 	private static void setRange(ItemStack item, int newRange) {
+        if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
 		NBTTagCompound nbt = item.getTagCompound();
-		if (nbt == null) nbt = new NBTTagCompound();
 		newRange = (HyperDimensionalBag.maxRange + 1 + newRange) % (HyperDimensionalBag.maxRange + 1);
 		nbt.setInteger("HDB|blockRange", newRange);
-		item.setTagCompound(nbt);
 	}
 	
 	public static boolean isAllExchangeMode(ItemStack item) {
-		NBTTagCompound nbt = item.getTagCompound();
-		if (nbt == null) nbt = new NBTTagCompound();
+        if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
+        NBTTagCompound nbt = item.getTagCompound();
 		return nbt.getBoolean("HDB|blockAllMode");
 	}
 	
 	private static void setAllExchangeMode(ItemStack item, boolean mode) {
+        if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
 		NBTTagCompound nbt = item.getTagCompound();
-		if (nbt == null) nbt = new NBTTagCompound();
 		nbt.setBoolean("HDB|blockAllMode", mode);
-		item.setTagCompound(nbt);
 	}
 
     public static int getBuildMode(ItemStack item) {
+        if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
         NBTTagCompound nbt = item.getTagCompound();
-        if (nbt == null) nbt = new NBTTagCompound();
         return nbt.getInteger("HDB|buildMode");
     }
 
     private static void setBuildMode(ItemStack item, int mode) {
+        if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
         NBTTagCompound nbt = item.getTagCompound();
-        if (nbt == null) nbt = new NBTTagCompound();
         mode = (EnumBuildMode.getMODESLength() + mode) % (EnumBuildMode.getMODESLength());
         nbt.setInteger("HDB|buildMode", mode);
-        item.setTagCompound(nbt);
     }
 
     public enum EnumBuildMode {
