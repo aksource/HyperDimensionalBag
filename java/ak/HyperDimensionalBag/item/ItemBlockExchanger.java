@@ -234,15 +234,27 @@ public class ItemBlockExchanger extends ItemTool {
 
         int start = 0;
         int end = range * 2;
+        int start1 = 0;
+        int end1 = range * 2;
         if (side == ForgeDirection.DOWN || side == ForgeDirection.UP) {
             double centerDifX = Math.abs(originPosition.chunkPosX + 0.5D - player.posX);
+            double signX = Math.signum(originPosition.chunkPosX + 0.5D - player.posX);
             //double baseCenterY = originPosition.chunkPosY + 0.5D;
             double centerDifZ = Math.abs(originPosition.chunkPosZ + 0.5D - player.posZ);
+            double signZ = Math.signum(originPosition.chunkPosZ + 0.5D - player.posZ);
 
             if (centerDifX < centerDifZ) {
                 dz = dx1 = 0;
+                if (signZ <= 0) {
+                    start1 = - range * 2;
+                    end1 = 0;
+                }
             } else {
                 dx = dz1 = 0;
+                if (signX <= 0) {
+                    start1 = - range * 2;
+                    end1 = 0;
+                }
             }
 
             if (centerDifX < 0.5D && centerDifZ < 0.5D) {
@@ -256,7 +268,7 @@ public class ItemBlockExchanger extends ItemTool {
             dy = 0;
         }
 
-        for (int axis0 = start; axis0 <= end; axis0++) {
+        for (int axis0 = start1; axis0 <= end1; axis0++) {
             for (int axis1 = start; axis1 <= end; axis1++) {
                 for (int axis2 = -range; axis2 <= range; axis2++) {
                     int x1 = basePositionX + offsetX * axis1 + dx * axis2 + dx1 * axis0;
