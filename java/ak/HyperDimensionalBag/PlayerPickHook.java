@@ -2,6 +2,7 @@ package ak.HyperDimensionalBag;
 
 import ak.HyperDimensionalBag.inventory.InventoryBag;
 import ak.HyperDimensionalBag.item.ItemHDBag;
+import com.google.common.collect.Sets;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -11,8 +12,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.oredict.OreDictionary;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
 
 public class PlayerPickHook
 {
@@ -63,7 +63,8 @@ public class PlayerPickHook
 	}
 
     private boolean areOreNameEquals(ItemStack check, ItemStack target) {
-        List<String> oreNames = getOreNames(target);
+        return check.isItemEqual(target);
+/*        LinkedHashSet<String> oreNames = getOreNames(target);
         if (oreNames != null && oreNames.size() > 0) {
             for (String oreName : oreNames) {
                 for (ItemStack itemStack : OreDictionary.getOres(oreName)) {
@@ -73,13 +74,13 @@ public class PlayerPickHook
             return false;
         } else {
             return check.isItemEqual(target);
-        }
+        }*/
     }
 
-    private List<String> getOreNames(ItemStack itemStack) {
+    private LinkedHashSet<String> getOreNames(ItemStack itemStack) {
         int[] oreIDs = OreDictionary.getOreIDs(itemStack);
         if (oreIDs.length > 0) {
-            List<String> oreNames = new ArrayList<>(oreIDs.length);
+            LinkedHashSet<String> oreNames = Sets.newLinkedHashSet();
             for (int id : oreIDs) {
                 oreNames.add(OreDictionary.getOreName(id));
             }
