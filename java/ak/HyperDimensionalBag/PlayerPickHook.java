@@ -63,7 +63,8 @@ public class PlayerPickHook
 	}
 
     private boolean areOreNameEquals(ItemStack check, ItemStack target) {
-        List<String> oreNames = getOreNames(target);
+        return check.isItemEqual(target);
+/*        List<String> oreNames = getOreNames(target);
         if (oreNames != null && oreNames.size() > 0) {
             for (String oreName : oreNames) {
                 for (ItemStack itemStack : OreDictionary.getOres(oreName)) {
@@ -73,7 +74,7 @@ public class PlayerPickHook
             return false;
         } else {
             return check.isItemEqual(target);
-        }
+        }*/
     }
 
     private List<String> getOreNames(ItemStack itemStack) {
