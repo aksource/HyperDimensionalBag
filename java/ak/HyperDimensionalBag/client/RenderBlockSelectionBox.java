@@ -3,6 +3,7 @@ package ak.HyperDimensionalBag.client;
 import ak.HyperDimensionalBag.item.ItemBlockExchanger;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.entity.player.EntityPlayer;
@@ -97,12 +98,12 @@ public class RenderBlockSelectionBox {
     public void renderBlockListSelectionBox(List<BlockPos> list, World world, EntityPlayer player, float partialTickItem) {
         double d3 = 0.002d;
         double d0, d1, d2;
-        GL11.glEnable(GL11.GL_BLEND);
+        GlStateManager.enableBlend();
         OpenGlHelper.glBlendFunc(770, 771, 1, 0);
-        GL11.glColor4f(0.0F, 0.0F, 0.0F, 0.4F);
+        GlStateManager.color(0.0F, 0.0F, 0.0F, 0.4F);
         GL11.glLineWidth(2.0F);
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
-        GL11.glDepthMask(false);
+        GlStateManager.func_179090_x();
+        GlStateManager.depthMask(false);
         for (BlockPos blockPos : list) {
             d0 = player.lastTickPosX + (player.posX - player.lastTickPosX) * (double)partialTickItem;
             d1 = player.lastTickPosY + (player.posY - player.lastTickPosY) * (double)partialTickItem;
@@ -112,8 +113,8 @@ public class RenderBlockSelectionBox {
             AxisAlignedBB axisAlignedBB = block.getSelectedBoundingBox(world, blockPos).expand(d3, d3, d3).offset(-d0, -d1, -d2);
             RenderGlobal.drawOutlinedBoundingBox(axisAlignedBB, 0xFFFFFF);
         }
-        GL11.glDepthMask(true);
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glDisable(GL11.GL_BLEND);
+        GlStateManager.depthMask(true);
+        GlStateManager.func_179098_w();
+        GlStateManager.disableBlend();
     }
 }
