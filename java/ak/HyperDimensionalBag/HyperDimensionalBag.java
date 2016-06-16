@@ -22,11 +22,18 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import java.util.logging.Logger;
 
-@Mod(modid="HyperDimensionalBag", name="HyperDimensionalBag", version="@VERSION@",dependencies="required-after:Forge@[10.12.0.1056,)", useMetadata = true)
-
-public class HyperDimensionalBag
-{
+@Mod(modid=HyperDimensionalBag.MOD_ID,
+		name=HyperDimensionalBag.MOD_NAME,
+        version=HyperDimensionalBag.MOD_VERSION,
+        dependencies=HyperDimensionalBag.MOD_DEPENDENCIES,
+        useMetadata = true,
+        acceptedMinecraftVersions = HyperDimensionalBag.MOD_MC_VERSION)
+public class HyperDimensionalBag {
 	public static final String MOD_ID = "HyperDimensionalBag";
+	public static final String MOD_NAME = "HyperDimensionalBag";
+	public static final String MOD_VERSION = "@VERSION@";
+	public static final String MOD_DEPENDENCIES = "required-after:Forge@[11.14.0.1237,)";
+	public static final String MOD_MC_VERSION = "[1.8,1.8.9]";
 	@Mod.Instance("HyperDimensionalBag")
 	public static HyperDimensionalBag instance;
 	@SidedProxy(clientSide = "ak.HyperDimensionalBag.client.ClientProxy", serverSide = "ak.HyperDimensionalBag.CommonProxy")

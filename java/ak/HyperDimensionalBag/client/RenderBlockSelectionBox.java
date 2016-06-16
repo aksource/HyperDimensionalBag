@@ -42,9 +42,9 @@ public class RenderBlockSelectionBox {
             MovingObjectPosition MOP = event.target;
             EntityPlayer player = event.player;
             World world = event.player.worldObj;
-            BlockPos blockPos = MOP.func_178782_a();
+            BlockPos blockPos = MOP.getBlockPos();
             IBlockState state = world.getBlockState(blockPos);
-            EnumFacing face = MOP.field_178784_b;
+            EnumFacing face = MOP.sideHit;
             ItemStack blockStack = new ItemStack(state.getBlock(), 1, state.getBlock().getMetaFromState(state));
             int mode = ItemBlockExchanger.getBuildMode(currentItem);
             boolean allMode = ItemBlockExchanger.isAllExchangeMode(currentItem);
@@ -102,7 +102,7 @@ public class RenderBlockSelectionBox {
         OpenGlHelper.glBlendFunc(770, 771, 1, 0);
         GlStateManager.color(0.0F, 0.0F, 0.0F, 0.4F);
         GL11.glLineWidth(2.0F);
-        GlStateManager.func_179090_x();
+        GlStateManager.disableTexture2D();
         GlStateManager.depthMask(false);
         for (BlockPos blockPos : list) {
             d0 = player.lastTickPosX + (player.posX - player.lastTickPosX) * (double)partialTickItem;
@@ -114,7 +114,7 @@ public class RenderBlockSelectionBox {
             RenderGlobal.drawOutlinedBoundingBox(axisAlignedBB, 0xFFFFFF);
         }
         GlStateManager.depthMask(true);
-        GlStateManager.func_179098_w();
+        GlStateManager.enableTexture2D();
         GlStateManager.disableBlend();
     }
 }
