@@ -20,7 +20,6 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameData;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import org.lwjgl.input.Keyboard;
 
@@ -412,8 +411,7 @@ public class ItemBlockExchanger extends ItemTool {
 		NBTTagCompound nbt = item.getTagCompound();
         String blockId = nbt.getString("HDB|targetBlockId");
         if(blockId == null || blockId.isEmpty()) return null;
-        GameRegistry.UniqueIdentifier uni = new GameRegistry.UniqueIdentifier(blockId);
-        return GameData.getBlockRegistry().getObject(blockId)/*GameRegistry.findBlock(uni.modId, uni.name)*/;
+        return Block.getBlockFromName(blockId);
 	}
 
     @Deprecated

@@ -27,6 +27,7 @@ import static ak.HyperDimensionalBag.item.ItemBlockExchanger.EnumBuildMode;
 import static net.minecraft.util.MovingObjectPosition.MovingObjectType.BLOCK;
 
 /**
+ * 設置予定ブロックのフレームを描画するクラス
  * Created by A.K. on 14/07/01.
  */
 @SideOnly(Side.CLIENT)
@@ -111,7 +112,7 @@ public class RenderBlockSelectionBox {
             IBlockState state = world.getBlockState(blockPos);
             Block block = state.getBlock();
             AxisAlignedBB axisAlignedBB = block.getSelectedBoundingBox(world, blockPos).expand(d3, d3, d3).offset(-d0, -d1, -d2);
-            RenderGlobal.drawOutlinedBoundingBox(axisAlignedBB, 0xFFFFFF);
+            RenderGlobal.drawOutlinedBoundingBox(axisAlignedBB, 0xFF, 0xFF, 0xFF, 0xFF);
         }
         GlStateManager.depthMask(true);
         GlStateManager.enableTexture2D();
