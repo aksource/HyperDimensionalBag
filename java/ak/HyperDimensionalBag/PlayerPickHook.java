@@ -2,13 +2,13 @@ package ak.HyperDimensionalBag;
 
 import ak.HyperDimensionalBag.inventory.InventoryBag;
 import ak.HyperDimensionalBag.item.ItemHDBag;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.storagebox.ItemStorageBox;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.oredict.OreDictionary;
 
 import java.util.ArrayList;
@@ -63,7 +63,8 @@ public class PlayerPickHook
 	}
 
     private boolean areOreNameEquals(ItemStack check, ItemStack target) {
-        List<String> oreNames = getOreNames(target);
+        return check.isItemEqual(target);
+/*        List<String> oreNames = getOreNames(target);
         if (oreNames != null && oreNames.size() > 0) {
             for (String oreName : oreNames) {
                 for (ItemStack itemStack : OreDictionary.getOres(oreName)) {
@@ -73,7 +74,7 @@ public class PlayerPickHook
             return false;
         } else {
             return check.isItemEqual(target);
-        }
+        }*/
     }
 
     private List<String> getOreNames(ItemStack itemStack) {

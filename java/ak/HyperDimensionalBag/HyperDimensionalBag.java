@@ -3,14 +3,14 @@ package ak.HyperDimensionalBag;
 import ak.HyperDimensionalBag.item.ItemBlockExchanger;
 import ak.HyperDimensionalBag.item.ItemHDBag;
 import ak.HyperDimensionalBag.network.PacketHandler;
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.SidedProxy;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLPostInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.network.NetworkRegistry;
-import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -22,10 +22,18 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import java.util.logging.Logger;
 
-@Mod(modid="HyperDimensionalBag", name="HyperDimensionalBag", version="@VERSION@",dependencies="required-after:Forge@[10.12.0.1056,)", useMetadata = true)
-
-public class HyperDimensionalBag
-{
+@Mod(modid=HyperDimensionalBag.MOD_ID,
+		name=HyperDimensionalBag.MOD_NAME,
+        version=HyperDimensionalBag.MOD_VERSION,
+        dependencies=HyperDimensionalBag.MOD_DEPENDENCIES,
+        useMetadata = true,
+        acceptedMinecraftVersions = HyperDimensionalBag.MOD_MC_VERSION)
+public class HyperDimensionalBag {
+	public static final String MOD_ID = "HyperDimensionalBag";
+	public static final String MOD_NAME = "HyperDimensionalBag";
+	public static final String MOD_VERSION = "@VERSION@";
+	public static final String MOD_DEPENDENCIES = "required-after:Forge@[11.14.0.1237,)";
+	public static final String MOD_MC_VERSION = "[1.8,1.8.9]";
 	@Mod.Instance("HyperDimensionalBag")
 	public static HyperDimensionalBag instance;
 	@SidedProxy(clientSide = "ak.HyperDimensionalBag.client.ClientProxy", serverSide = "ak.HyperDimensionalBag.CommonProxy")
@@ -53,9 +61,9 @@ public class HyperDimensionalBag
         maxRange = config.get(Configuration.CATEGORY_GENERAL, "maxBlockExchangeRange", 10).getInt();
         exchangeInvisibleBlock = config.get(Configuration.CATEGORY_GENERAL, "exchangeInvisibleBlock", false, "true : exchange invisible block").getBoolean(false);
         config.save();
-		HDBag = new ItemHDBag().setUnlocalizedName(TextureDomain + "Bag").setTextureName(TextureDomain + "Bag").setCreativeTab(CreativeTabs.tabTools);
-		GameRegistry.registerItem(HDBag, "hyperdimentionalbag");
-        itemBlockExchanger = new ItemBlockExchanger().setUnlocalizedName(TextureDomain + "BlockExchanger").setTextureName(TextureDomain + "BlockExchanger").setCreativeTab(CreativeTabs.tabTools);
+		HDBag = new ItemHDBag().setUnlocalizedName(TextureDomain + "Bag").setCreativeTab(CreativeTabs.tabTools);
+		GameRegistry.registerItem(HDBag, "hyperdimensionalbag");
+        itemBlockExchanger = new ItemBlockExchanger().setUnlocalizedName(TextureDomain + "BlockExchanger").setCreativeTab(CreativeTabs.tabTools);
         GameRegistry.registerItem(itemBlockExchanger, "itemblockexchanger");
 
         PacketHandler.init();
@@ -77,6 +85,6 @@ public class HyperDimensionalBag
 	@Mod.EventHandler
 	public void postInit(FMLPostInitializationEvent event)
 	{
-		loadSB = Loader.isModLoaded("net.minecraft.storagebox.mod_StorageBox");
+		loadSB = Loader.isModLoaded("storagebox");
 	}
 }
