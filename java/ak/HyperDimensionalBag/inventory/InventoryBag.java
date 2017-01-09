@@ -4,7 +4,8 @@ import ak.HyperDimensionalBag.item.ItemHDBag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.IChatComponent;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 
 public class InventoryBag implements IInventory{
@@ -124,7 +125,7 @@ public class InventoryBag implements IInventory{
     }
 
     @Override
-    public IChatComponent getDisplayName() {
-        return null;
+    public ITextComponent getDisplayName() {
+        return new TextComponentString("");
     }
 }
