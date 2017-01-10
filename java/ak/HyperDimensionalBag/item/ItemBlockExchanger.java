@@ -83,9 +83,9 @@ public class ItemBlockExchanger extends ItemTool {
 	public ActionResult<ItemStack> onItemRightClick(ItemStack itemStack, World world, EntityPlayer player, EnumHand hand) {
 		if(world.isRemote) {
             PacketHandler.INSTANCE.sendToServer(new MessageKeyPressed(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)));
-            return new ActionResult(EnumActionResult.SUCCESS, itemStack);
+            return new ActionResult<>(EnumActionResult.SUCCESS, itemStack);
         }
-		return new ActionResult(EnumActionResult.SUCCESS, itemStack);
+		return new ActionResult<>(EnumActionResult.SUCCESS, itemStack);
 	}
 
     public static void onRightClickAction(ItemStack itemStack, EntityPlayer player, boolean keyPressed) {
