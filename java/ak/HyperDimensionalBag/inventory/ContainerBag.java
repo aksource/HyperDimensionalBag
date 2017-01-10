@@ -46,7 +46,7 @@ public class ContainerBag extends Container
 	 public ItemStack transferStackInSlot(EntityPlayer par1EntityPlayer, int par2)
 	 {
 		 ItemStack itemstack = null;
-		 Slot slot = (Slot)this.inventorySlots.get(par2);
+		 Slot slot = this.inventorySlots.get(par2);
 
 		 if (slot != null && slot.getHasStack())
 		 {
