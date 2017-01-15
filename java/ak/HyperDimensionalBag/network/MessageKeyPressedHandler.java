@@ -14,8 +14,8 @@ public class MessageKeyPressedHandler implements IMessageHandler<MessageKeyPress
     @Override
     public IMessage onMessage(MessageKeyPressed message, MessageContext ctx) {
         EntityPlayer player = ctx.getServerHandler().playerEntity;
-        ItemStack itemStack = player.getCurrentEquippedItem();
-        if (itemStack != null && itemStack.getItem() instanceof ItemBlockExchanger) {
+        ItemStack itemStack = player.getHeldItemMainhand();
+        if (itemStack != ItemStack.EMPTY && itemStack.getItem() instanceof ItemBlockExchanger) {
             ItemBlockExchanger.onRightClickAction(itemStack, player, message.keyCtrlDwon);
         }
         return null;

@@ -9,10 +9,10 @@ import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static ak.HyperDimensionalBag.item.ItemBlockExchanger.EnumBuildMode;
-import static net.minecraft.util.MovingObjectPosition.MovingObjectType.BLOCK;
 
 /**
  * 設置予定ブロックのフレームを描画するクラス
@@ -35,14 +34,14 @@ public class RenderBlockSelectionBox {
 
     @SubscribeEvent
     public void onRenderSelectionBox(DrawBlockHighlightEvent event) {
-        ItemStack currentItem = event.currentItem;
-        if (event.target.typeOfHit == BLOCK
+        ItemStack currentItem = event.getPlayer().getHeldItemMainhand();
+        if (event.getTarget().typeOfHit == RayTraceResult.Type.BLOCK
                 && currentItem != null
                 && currentItem.getItem() instanceof ItemBlockExchanger) {
             List<BlockPos> list = new ArrayList<>();
-            MovingObjectPosition MOP = event.target;
-            EntityPlayer player = event.player;
-            World world = event.player.worldObj;
+            RayTraceResult MOP = event.getTarget();
+            EntityPlayer player = event.getPlayer();
+            World world = event.getPlayer().getEntityWorld();
             BlockPos blockPos = MOP.getBlockPos();
             IBlockState state = world.getBlockState(blockPos);
             EnumFacing face = MOP.sideHit;
@@ -51,23 +50,23 @@ public class RenderBlockSelectionBox {
             boolean allMode = ItemBlockExchanger.isAllExchangeMode(currentItem);
             if (EnumBuildMode.getMode(mode) == EnumBuildMode.exchange) {
                 searchBlock(world, blockStack, blockPos, blockPos, face, face, currentItem, list);
-                renderBlockListSelectionBox(list, world, player, event.partialTicks);
+                renderBlockListSelectionBox(list, world, player, event.getPartialTicks());
             }
             int range = ItemBlockExchanger.getRange(currentItem);
 
             if (EnumBuildMode.getMode(mode) == EnumBuildMode.wall) {
                 list = ItemBlockExchanger.getNextWallBlockPosList(world, player, blockPos, face, range, allMode);
-                renderBlockListSelectionBox(list, world, player, event.partialTicks);
+                renderBlockListSelectionBox(list, world, player, event.getPartialTicks());
             }
 
             if (EnumBuildMode.getMode(mode) == EnumBuildMode.pillar) {
                 list = ItemBlockExchanger.getNextPillarBlockPosList(world, blockPos, face, range, allMode);
-                renderBlockListSelectionBox(list, world, player, event.partialTicks);
+                renderBlockListSelectionBox(list, world, player, event.getPartialTicks());
             }
 
             if (EnumBuildMode.getMode(mode) == EnumBuildMode.cube) {
                 list = ItemBlockExchanger.getNextCubeBlockPosList(world, player, blockPos, face, range, allMode);
-                renderBlockListSelectionBox(list, world, player, event.partialTicks);
+                renderBlockListSelectionBox(list, world, player, event.getPartialTicks());
             }
             event.setCanceled(true);
         }
@@ -88,7 +87,7 @@ public class RenderBlockSelectionBox {
     private boolean isValidBlock(World world, ItemStack item, BlockPos blockPos, ItemStack firstFocusBlock) {
         IBlockState state = world.getBlockState(blockPos);
         Block block = state.getBlock();
-        if(block == Blocks.air) return false;
+        if(block == Blocks.AIR) return false;
         ItemStack nowBlock = new ItemStack(block, 1, block.getMetaFromState(state));
         Block targetBlock = ItemBlockExchanger.getTargetBlock(item);
         int targetBlockMeta = ItemBlockExchanger.getTargetItemStackMeta(item);
@@ -110,9 +109,8 @@ public class RenderBlockSelectionBox {
             d1 = player.lastTickPosY + (player.posY - player.lastTickPosY) * (double)partialTickItem;
             d2 = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * (double)partialTickItem;
             IBlockState state = world.getBlockState(blockPos);
-            Block block = state.getBlock();
-            AxisAlignedBB axisAlignedBB = block.getSelectedBoundingBox(world, blockPos).expand(d3, d3, d3).offset(-d0, -d1, -d2);
-            RenderGlobal.drawOutlinedBoundingBox(axisAlignedBB, 0xFF, 0xFF, 0xFF, 0xFF);
+            AxisAlignedBB axisAlignedBB = state.getSelectedBoundingBox(world, blockPos).expand(d3, d3, d3).offset(-d0, -d1, -d2);
+            RenderGlobal.drawSelectionBoundingBox(axisAlignedBB, 1.0F, 1.0F, 1.0F, 1.0F);
         }
         GlStateManager.depthMask(true);
         GlStateManager.enableTexture2D();

@@ -4,69 +4,74 @@ import ak.HyperDimensionalBag.item.ItemHDBag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.IChatComponent;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 
-public class InventoryBag implements IInventory{
-    private BagData data;
-    public InventoryBag(ItemStack hdbag, World world)
-    {
+import javax.annotation.Nonnull;
+import java.util.Optional;
+
+public class InventoryBag implements IInventory {
+    private final BagData data;
+
+    public InventoryBag(ItemStack hdbag, World world) {
         data = ItemHDBag.getBagData(hdbag, world);
     }
+
     @Override
-    public int getSizeInventory()
-    {
-        return data.items.length;
+    public int getSizeInventory() {
+        return data.items.size();
     }
 
     @Override
-    public ItemStack getStackInSlot(int var1)
-    {
-        return data.items[var1];
+    public boolean isEmpty() {
+        return data.hasItem();
     }
 
     @Override
-    public ItemStack decrStackSize(int var1, int var2)
-    {
-        if(data.items[var1] != null)
-        {
-            ItemStack var3;
-            if(data.items[var1].stackSize <= var2)
-            {
-                var3 = data.items[var1];
-                data.items[var1] = null;
+    @Nonnull
+    public ItemStack getStackInSlot(int index) {
+        return Optional.of(data.items.get(index % data.items.size())).orElse(ItemStack.EMPTY);
+    }
+
+    @Override
+    @Nonnull
+    public ItemStack decrStackSize(int index, int count) {
+        if (data.items.get(index) != ItemStack.EMPTY) {
+            ItemStack itemStack;
+            if (data.items.get(index).getCount() <= count) {
+                itemStack = data.items.get(index);
+                data.items.set(index, ItemStack.EMPTY);
                 this.markDirty();
-                return var3;
-            }
-            else
-            {
-                var3 = data.items[var1].splitStack(var2);
+                return itemStack;
+            } else {
+                itemStack = data.items.get(index).splitStack(count);
 
-                if (data.items[var1].stackSize == 0)
-                {
-                    data.items[var1] = null;
+                if (data.items.get(index).getCount() == 0) {
+                    data.items.set(index, ItemStack.EMPTY);
                 }
 
                 this.markDirty();
-                return var3;
+                return itemStack;
             }
+        } else {
+            return ItemStack.EMPTY;
         }
-        else
-            return null;
     }
 
     @Override
-    public ItemStack removeStackFromSlot(int var1)
-    {
-        return null;
+    @Nonnull
+    public ItemStack removeStackFromSlot(int index) {
+        return ItemStack.EMPTY;
     }
 
     @Override
-    public void setInventorySlotContents(int var1, ItemStack var2) {
-        data.items[var1] = var2;
+    public void setInventorySlotContents(int index, @Nonnull ItemStack itemStack) {
+        data.items.set(index, itemStack);
     }
 
     @Override
+    @Nonnull
     public String getName() {
         return "HDBag";
     }
@@ -76,21 +81,21 @@ public class InventoryBag implements IInventory{
         return 64;
     }
 
-	@Override
-	public void markDirty() {
-		data.upDate = true;
-	}
+    @Override
+    public void markDirty() {
+        data.upDate = true;
+    }
 
     @Override
-    public boolean isUseableByPlayer(EntityPlayer var1) {
+    public boolean isUsableByPlayer(@Nonnull EntityPlayer entityPlayer) {
         return true;
     }
 
     @Override
-    public void openInventory(EntityPlayer player) {}
+    public void openInventory(@Nonnull EntityPlayer player) {}
 
     @Override
-    public void closeInventory(EntityPlayer player) {
+    public void closeInventory(@Nonnull EntityPlayer player) {
         this.markDirty();
     }
 
@@ -98,8 +103,9 @@ public class InventoryBag implements IInventory{
     public boolean hasCustomName() {
         return false;
     }
+
     @Override
-    public boolean isItemValidForSlot(int i, ItemStack itemstack) {
+    public boolean isItemValidForSlot(int i, @Nonnull ItemStack itemstack) {
         return !(itemstack.getItem() instanceof ItemHDBag);
     }
 
@@ -124,7 +130,8 @@ public class InventoryBag implements IInventory{
     }
 
     @Override
-    public IChatComponent getDisplayName() {
-        return null;
+    @Nonnull
+    public ITextComponent getDisplayName() {
+        return new TextComponentString("");
     }
 }

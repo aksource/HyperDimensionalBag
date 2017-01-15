@@ -2,86 +2,82 @@ package ak.HyperDimensionalBag.item;
 
 import ak.HyperDimensionalBag.HyperDimensionalBag;
 import ak.HyperDimensionalBag.inventory.BagData;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemDye;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
-import java.util.List;
+import javax.annotation.Nonnull;
 
-public class ItemHDBag extends Item{
-	public BagData data;
-	public ItemHDBag(){
-		super();
-		this.setHasSubtypes(true);
-	}
-	@Override
-	public String getUnlocalizedName(ItemStack item)
-	{
-		int meta = MathHelper.clamp_int(item.getItemDamage(), 0, 15);
-		return "item.HDBag."+String.valueOf(meta);
-	}
+public class ItemHDBag extends Item {
+    private static final String NBT_KEY_ITEM_BAG = "Bag";
+
+    public ItemHDBag() {
+        super();
+        this.setHasSubtypes(true);
+    }
+
+    public static BagData getBagData(ItemStack item, World world) {
+        BagData data = null;
+        if (item != ItemStack.EMPTY && item.getItem() instanceof ItemHDBag) {
+            data = ((ItemHDBag) item.getItem()).getData(item, world);
+        }
+        return data;
+    }
+
+    @Override
+    @Nonnull
+    public String getUnlocalizedName(ItemStack item) {
+        int meta = MathHelper.clamp(item.getItemDamage(), 0, 15);
+        return "item.HDBag." + String.valueOf(meta);
+    }
+
     @SideOnly(Side.CLIENT)
     @Override
-    public int getColorFromItemStack(ItemStack item, int renderpass)
-    {
-    	int meta = MathHelper.clamp_int(item.getItemDamage(), 0, 15);
-        return ItemDye.dyeColors[meta];
+    public void getSubItems(@Nonnull Item itemIn, CreativeTabs tab, NonNullList<ItemStack> subItems) {
+        for (int i = 0; i < 16; i++)
+            subItems.add(new ItemStack(itemIn, 1, i));
     }
-    @SideOnly(Side.CLIENT)
+
     @Override
-    @SuppressWarnings("unchecked")
-    public void getSubItems(Item par1, CreativeTabs par2CreativeTabs, List par3List)
-    {
-    	for(int i=0;i<16;i++)
-    		par3List.add(new ItemStack(par1, 1, i));
+    @Nonnull
+    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, @Nonnull EnumHand enumHand) {
+        player.openGui(HyperDimensionalBag.instance, HyperDimensionalBag.guiID, world, player.chunkCoordX, player.chunkCoordY, player.chunkCoordZ);
+        return new ActionResult<>(EnumActionResult.SUCCESS, player.getHeldItem(enumHand));
     }
-	@Override
-    public ItemStack onItemRightClick(ItemStack item, World world, EntityPlayer player)
-    {
-		player.openGui(HyperDimensionalBag.instance, HyperDimensionalBag.guiID, world, player.chunkCoordX, player.chunkCoordY, player.chunkCoordZ);
-    	return item;
+
+    public void onUpdate(ItemStack itemStack, World worldIn, Entity entityIn, int itemSlot, boolean isSelected) {
+        if (entityIn instanceof EntityPlayer && isSelected) {
+            EntityPlayer player = (EntityPlayer) entityIn;
+            if (!worldIn.isRemote) {
+                BagData data;
+                data = getData(itemStack, worldIn);
+                data.onUpdate(worldIn, player);
+                data.markDirty();
+            }
+        }
     }
-	public void onUpdate(ItemStack item, World world, Entity entity, int par4, boolean par5) {
-		if(entity instanceof EntityPlayer && par5){
-			EntityPlayer player = (EntityPlayer) entity;
-			if(!world.isRemote)
-			{
-				this.data = getData(item,world);
-				this.data.onUpdate(world, player);
-				this.data.markDirty();
-			}
-		}
-	}
-	public static BagData getBagData(ItemStack item, World world)
-	{
-		BagData data = null;
-		if(item != null && item.getItem() instanceof ItemHDBag)
-		{
-			data = ((ItemHDBag)item.getItem()).getData(item, world);
-		}
-		return data;
-	}
-	public BagData getData(ItemStack var1, World var2)
-	{
-		String itemName = "Bag";
-		int itemDamage = MathHelper.clamp_int(var1.getItemDamage(),0,15);
-		String var3 = String.format("%s_%s", itemName, itemDamage);
-		BagData var4 = (BagData)var2.loadItemData(BagData.class, var3);
 
-		if (var4 == null)
-		{
-			var4 = new BagData(var3);
-			var4.markDirty();
-			var2.setItemData(var3, var4);
-		}
+    public BagData getData(ItemStack itemStack, World world) {
+        int itemDamage = MathHelper.clamp(itemStack.getItemDamage(), 0, 15);
+        String worldSavedDataKey = String.format("%s_%s", NBT_KEY_ITEM_BAG, itemDamage);
+        BagData bagData = (BagData) world.loadData(BagData.class, worldSavedDataKey);
 
-		return var4;
-	}
+        if (bagData == null) {
+            bagData = new BagData(worldSavedDataKey);
+            bagData.markDirty();
+            world.setData(worldSavedDataKey, bagData);
+        }
+
+        return bagData;
+    }
 }

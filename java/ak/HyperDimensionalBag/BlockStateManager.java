@@ -1,6 +1,5 @@
 package ak.HyperDimensionalBag;
 
-import com.google.common.collect.ImmutableSet;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
@@ -11,6 +10,7 @@ import net.minecraftforge.common.util.Constants;
 import java.util.Set;
 
 /**
+ * BlockState用マネージャークラス
  * Created by A.K. on 14/12/29.
  */
 public class BlockStateManager {
@@ -21,10 +21,9 @@ public class BlockStateManager {
         itemStack.getTagCompound().setTag("HDB|blockstate", nbtTagList);
     }
     
-    @SuppressWarnings("unchecked")
     public static NBTTagList getTagList(IBlockState blockState) {
         NBTTagList nbtTagList = new NBTTagList();
-        for (IProperty property : (ImmutableSet<IProperty>)blockState.getProperties().keySet()) {
+        for (IProperty property : blockState.getProperties().keySet()) {
             NBTTagCompound nbt = new NBTTagCompound();
             nbt.setString("propertyName", property.getName());
             nbt.setString("propertyValue", property.getName(blockState.getValue(property)));
@@ -72,7 +71,7 @@ public class BlockStateManager {
 
     @SuppressWarnings("unchecked")
     public static IProperty getProperty(IBlockState blockState, String propertyName) {
-        for (IProperty property : (ImmutableSet<IProperty>)blockState.getProperties().keySet()) {
+        for (IProperty property : blockState.getProperties().keySet()) {
             if (property.getName().equals(propertyName)) {
                 return property;
             }

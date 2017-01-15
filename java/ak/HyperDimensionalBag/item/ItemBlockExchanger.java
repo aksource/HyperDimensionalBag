@@ -15,41 +15,52 @@ import net.minecraft.item.ItemTool;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.storagebox.ItemStorageBox;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import org.lwjgl.input.Keyboard;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 public class ItemBlockExchanger extends ItemTool {
 
+    private static final String NBT_KEY_BLOCK_ID = "HDB|targetBlockId";
+    private static final String NBT_KEY_BLOCK_META = "HDB|targetBlockMeta";
+    private static final String NBT_KEY_BLOCK_RANGE = "HDB|blockRange";
+    private static final String NBT_KEY_BLOCK_ALL_MODE = "HDB|blockAllMode";
+    private static final String NBT_KEY_BLOCK_BUILD_MODE = "HDB|buildMode";
+
 	public ItemBlockExchanger() {
-		super(1.0F, ToolMaterial.EMERALD, new HashSet());
+		super(1.0F, 1.0F, ToolMaterial.DIAMOND, new HashSet<>());
 		this.setMaxStackSize(1);
 		this.setMaxDamage(0);
 	}
 
 	@Override
-	public boolean onItemUse(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, World par3World, BlockPos blockPos, EnumFacing side, float par8, float par9, float par10) {
+    @Nonnull
+	public EnumActionResult onItemUse(EntityPlayer par2EntityPlayer, World par3World, BlockPos blockPos, EnumHand hand, EnumFacing side, float par8, float par9, float par10) {
 //		if(par3World.isRemote) return false;
+        ItemStack par1ItemStack = par2EntityPlayer.getHeldItem(hand);
         IBlockState state = par3World.getBlockState(blockPos);
 		int blockMeta = state.getBlock().getMetaFromState(state);
 		Block targetId = getTargetBlock(par1ItemStack);
 		ItemStack targetBlockStack = new ItemStack(state.getBlock(), 1, blockMeta);
-		if(targetId == null || targetId == Blocks.air || par2EntityPlayer.isSneaking()) {
+		if(targetId == null || targetId == Blocks.AIR || par2EntityPlayer.isSneaking()) {
 			setTargetBlock(par1ItemStack, state.getBlock());
 			setTargetItemStackMeta(par1ItemStack, blockMeta);
 			if(!par3World.isRemote) {
 				String registerBlock = String.format("Register block : %s", state.getBlock().getLocalizedName());
-				par2EntityPlayer.addChatMessage(new ChatComponentText(registerBlock));
+				par2EntityPlayer.sendMessage(new TextComponentString(registerBlock));
 			}
-            return true;
+            return EnumActionResult.SUCCESS;
 		}
         int mode = getBuildMode(par1ItemStack);
         if (EnumBuildMode.getMode(mode) == EnumBuildMode.exchange) {
@@ -74,16 +85,18 @@ public class ItemBlockExchanger extends ItemTool {
             blockPosList = getNextCubeBlockPosList(par3World, par2EntityPlayer, blockPos, side, range, allMode);
             putBlockToBlockPosList(par3World, par2EntityPlayer, blockPosList, par1ItemStack, targetBlockStack, allMode);
         }
-        return true;
+        return EnumActionResult.SUCCESS;
 	}
 
 	@Override
-	public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer player) {
+    @Nonnull
+	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, @Nonnull EnumHand hand) {
+	    ItemStack itemStack = player.getHeldItem(hand);
 		if(world.isRemote) {
             PacketHandler.INSTANCE.sendToServer(new MessageKeyPressed(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)));
-            return itemStack;
+            return new ActionResult<>(EnumActionResult.SUCCESS, itemStack);
         }
-		return itemStack;
+		return new ActionResult<>(EnumActionResult.SUCCESS, itemStack);
 	}
 
     public static void onRightClickAction(ItemStack itemStack, EntityPlayer player, boolean keyPressed) {
@@ -91,13 +104,13 @@ public class ItemBlockExchanger extends ItemTool {
             if (player.isSneaking()) {
                 setAllExchangeMode(itemStack, !isAllExchangeMode(itemStack));
                 String allExchangeMode = String.format("All Exchange Mode : %b", isAllExchangeMode(itemStack));
-                player.addChatMessage(new ChatComponentText(allExchangeMode));
+                player.sendMessage(new TextComponentString(allExchangeMode));
             } else {
                 int nowMode = getBuildMode(itemStack);
                 nowMode++;
                 setBuildMode(itemStack, nowMode);
                 String buildMode = String.format("Builder Mode : %s", EnumBuildMode.getMode(getBuildMode(itemStack)).name());
-                player.addChatMessage(new ChatComponentText(buildMode));
+                player.sendMessage(new TextComponentString(buildMode));
             }
         } else {
             int nowRange = getRange(itemStack);
@@ -106,19 +119,18 @@ public class ItemBlockExchanger extends ItemTool {
             setRange(itemStack, nowRange);
             int range = 1 + getRange(itemStack) * 2;
             String blockRange = String.format("Range : %d*%d", range, range);
-            player.addChatMessage(new ChatComponentText(blockRange));
+            player.sendMessage(new TextComponentString(blockRange));
         }
     }
 
 	@Override
-    @SuppressWarnings("unchecked")
-	public void addInformation(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, List par3List, boolean par4) {
+	public void addInformation(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, List<String> par3List, boolean par4) {
 		int range = 1 + getRange(par1ItemStack) * 2;
 		String blockRange = String.format("Range : %d*%d", range, range);
 		Block block = getTargetBlock(par1ItemStack);
 		int meta = getTargetItemStackMeta(par1ItemStack);
         String blockName;
-		if (block != null) {
+		if (block != null && block != Blocks.AIR) {
 			ItemStack targetBlockStack = new ItemStack(block, 1, meta);
 			blockName = String.format("Target Block : %s",  targetBlockStack.getDisplayName());
 		} else {
@@ -132,9 +144,7 @@ public class ItemBlockExchanger extends ItemTool {
 	}
 
 	private void getDroppedBlock(World world, EntityPlayer player) {
-        @SuppressWarnings("unchecked")
 		List<EntityItem> list = world.getEntitiesWithinAABB(EntityItem.class, player.getEntityBoundingBox().expand(5d, 5d, 5d));
-		if (list == null) return;
 		double d0, d1, d2;
 		float f1 = player.rotationYaw * 0.01745329F;
 		for (EntityItem eItem : list) {
@@ -145,7 +155,7 @@ public class ItemBlockExchanger extends ItemTool {
 			eItem.setPosition(d0, d1, d2);
 		}
 	}
-	
+
 	private void searchExchangeableBlock(World world, EntityPlayer player, ItemStack blockStack, BlockPos chunkpos, BlockPos origin, EnumFacing face, EnumFacing originFace, ItemStack heldItem) {
 		if(!isVisibleBlock(world, getNextBlockPos(chunkpos, originFace)) || !hasTargetBlock(heldItem, player, chunkpos) || !exchangeBlock(world, player, heldItem, chunkpos, blockStack)) return;
 		for (EnumFacing enumFacing : EnumFacing.values()) {
@@ -197,7 +207,7 @@ public class ItemBlockExchanger extends ItemTool {
 //                int x1 = basePositionX + offsetX * axis1 + dx * axis2;
 //                int y1 = basePositionY + offsetY * axis1 + dy * axis2;
 //                int z1 = basePositionZ + offsetZ * axis1 + dz * axis2;
-                if (world.getBlockState(blockPos1).getBlock() == Blocks.air || allMode) {
+                if (world.getBlockState(blockPos1).getBlock() == Blocks.AIR || allMode) {
                     list.add(blockPos1);
                 }
             }
@@ -211,7 +221,7 @@ public class ItemBlockExchanger extends ItemTool {
         BlockPos blockPos1;
         for (int axis1 = 0; axis1 <= range * 2; axis1++) {
             blockPos1 = blockPos.offset(side, axis1);
-            if (world.getBlockState(blockPos1).getBlock() == Blocks.air || allMode) {
+            if (world.getBlockState(blockPos1).getBlock() == Blocks.AIR || allMode) {
                 list.add(blockPos1);
             }
         }
@@ -280,7 +290,7 @@ public class ItemBlockExchanger extends ItemTool {
 //                    int x1 = basePositionX + offsetX * axis1 + dx * axis2 + dx1 * axis0;
 //                    int y1 = basePositionY + offsetY * axis1 + dy * axis2 + dy1 * axis0;
 //                    int z1 = basePositionZ + offsetZ * axis1 + dz * axis2 + dz1 * axis0;
-                    if (world.getBlockState(blockPos1).getBlock() == Blocks.air || allMode) {
+                    if (world.getBlockState(blockPos1).getBlock() == Blocks.AIR || allMode) {
                         list.add(blockPos1);
                     }
                 }
@@ -298,19 +308,19 @@ public class ItemBlockExchanger extends ItemTool {
             Block block = state.getBlock();
             int meta = block.getMetaFromState(state);
             ItemStack nowBlock = new ItemStack(block, 1, meta);
-            if (target.isItemEqual(nowBlock) || (block != Blocks.air && !allMode)) continue;
+            if (target.isItemEqual(nowBlock) || (block != Blocks.AIR && !allMode)) continue;
 
             if (decreaseBlockFromInventory(exchangeItem, player, blockPos)) {
                 Block targetBlock = getTargetBlock(exchangeItem);
                 int targetMeta = getTargetItemStackMeta(exchangeItem);
                 IBlockState targetState = targetBlock.getStateFromMeta(targetMeta);
                 world.setBlockState(blockPos, targetState, 3);
-                if (block != Blocks.air) {
+                if (block != Blocks.AIR) {
                     block.onBlockHarvested(world, blockPos, targetState, player);
                     block.onBlockDestroyedByPlayer(world, blockPos, targetState);
                     if(!player.capabilities.isCreativeMode) {
                         TileEntity tile = world.getTileEntity(blockPos);
-                        block.harvestBlock(world, player, new BlockPos(player.posX, player.posY, player.posZ), state, tile);
+                        block.harvestBlock(world, player, new BlockPos(player.posX, player.posY, player.posZ), state, tile, player.getHeldItemMainhand());
                     }
                 }
             }
@@ -320,19 +330,19 @@ public class ItemBlockExchanger extends ItemTool {
 	public static BlockPos getNextBlockPos(BlockPos pos, EnumFacing side) {
 		return new BlockPos(pos).offset(side);
 	}
-	
+
 	public static  boolean checkBlockInRange(ItemStack item, BlockPos check, BlockPos origin) {
 		return Math.abs(check.getX() - origin.getX()) <= getRange(item) && Math.abs(check.getY() - origin.getY()) <= getRange(item) && Math.abs(check.getZ() - origin.getZ()) <= getRange(item);
 	}
-	
+
 	public static  boolean isVisibleBlock(World world, BlockPos pos) {
-		return HyperDimensionalBag.exchangeInvisibleBlock || world.getBlockState(pos).getBlock() == Blocks.air || !world.getBlockState(pos).getBlock().isOpaqueCube();
+		return HyperDimensionalBag.exchangeInvisibleBlock || world.getBlockState(pos).getBlock() == Blocks.AIR || !world.getBlockState(pos).getBlock().isOpaqueCube(world.getBlockState(pos));
 	}
-	
+
 	private static boolean exchangeBlock(World world, EntityPlayer player, ItemStack item, BlockPos pos, ItemStack firstFocusBlock) {
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
-		if(block == Blocks.air) return false;
+		if(block == Blocks.AIR) return false;
 		int meta = block.getMetaFromState(state);
 		ItemStack nowBlock = new ItemStack(block, 1, meta);
 		Block targetBlock = getTargetBlock(item);
@@ -345,41 +355,45 @@ public class ItemBlockExchanger extends ItemTool {
 			block.onBlockDestroyedByPlayer(world,pos, state);
 			if(!player.capabilities.isCreativeMode) {
                 TileEntity tile = world.getTileEntity(pos);
-                block.harvestBlock(world, player, new BlockPos(player.posX, player.posY, player.posZ), state, tile);
+                block.harvestBlock(world, player, new BlockPos(player.posX, player.posY, player.posZ), state, tile, player.getHeldItemMainhand());
             }
 			return true;
 		} else return false;
 	}
-	
+
 	private static boolean decreaseBlockFromInventory(ItemStack exchangeItem, EntityPlayer player, BlockPos pos) {
 		if (player.capabilities.isCreativeMode) return true;
 		InventoryPlayer inv = player.inventory;
 		ItemStack targetBlockStack = new ItemStack(getTargetBlock(exchangeItem), 1, getTargetItemStackMeta(exchangeItem));
         for(int i = 0; i < inv.getSizeInventory();i++) {
             ItemStack item = inv.getStackInSlot(i);
-            if (item == null) continue;
-            if (checkValidBlock(player.worldObj, pos, targetBlockStack, item)) {
-                item.stackSize--;
-                if(item.stackSize == 0) inv.setInventorySlotContents(i, null);
+            if (item == ItemStack.EMPTY) continue;
+            if (checkValidBlock(player.getEntityWorld(), pos, targetBlockStack, item)) {
+                item.shrink(-1);
+                if(item.getCount() == 0) inv.setInventorySlotContents(i, ItemStack.EMPTY);
                 return true;
-            } else if (HyperDimensionalBag.loadSB && item.getItem() instanceof ItemStorageBox && ItemStorageBox.peekItemStackAll(item) != null && checkValidBlock(player.worldObj, pos, targetBlockStack, ItemStorageBox.peekItemStackAll(item)) && ItemStorageBox.peekItemStackAll(item).stackSize > 1) {
+            } else if (HyperDimensionalBag.loadSB
+                    && item.getItem() instanceof ItemStorageBox
+                    && ItemStorageBox.peekItemStackAll(item) != null
+                    && checkValidBlock(player.getEntityWorld(), pos, targetBlockStack, ItemStorageBox.peekItemStackAll(item))
+                    && ItemStorageBox.peekItemStackAll(item).getCount() > 1) {
                 ItemStack copy = ItemStorageBox.peekItemStack(item);
-                copy.stackSize = 1;
+                copy.setCount(1);
                 ItemStorageBox.removeItemStack(item, copy);
                 return true;
             }
         }
 		return false;
 	}
-	
+
 	private boolean hasTargetBlock(ItemStack exchangeItem, EntityPlayer player, BlockPos pos) {
 		if (player.capabilities.isCreativeMode) return true;
 		InventoryPlayer inv = player.inventory;
 		ItemStack targetBlockStack = new ItemStack(getTargetBlock(exchangeItem), 1, getTargetItemStackMeta(exchangeItem));
 		for(ItemStack item : inv.mainInventory) {
             if(item == null) continue;
-            if (checkValidBlock(player.worldObj, pos, targetBlockStack, item)) return true;
-			else if (HyperDimensionalBag.loadSB && item.getItem() instanceof ItemStorageBox && ItemStorageBox.peekItemStackAll(item) != null && checkValidBlock(player.worldObj, pos, targetBlockStack, ItemStorageBox.peekItemStackAll(item)) && ItemStorageBox.peekItemStackAll(item).stackSize > 1) {
+            if (checkValidBlock(player.getEntityWorld(), pos, targetBlockStack, item)) return true;
+			else if (HyperDimensionalBag.loadSB && item.getItem() instanceof ItemStorageBox && ItemStorageBox.peekItemStackAll(item) != null && checkValidBlock(player.getEntityWorld(), pos, targetBlockStack, ItemStorageBox.peekItemStackAll(item)) && ItemStorageBox.peekItemStackAll(item).getCount() > 1) {
 				return true;
 			}
 		}
@@ -403,14 +417,14 @@ public class ItemBlockExchanger extends ItemTool {
 	private static void setTargetBlock(ItemStack item, Block block) {
         if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
 		NBTTagCompound nbt = item.getTagCompound();
-		nbt.setString("HDB|targetBlockId", GameRegistry.findUniqueIdentifierFor(block).toString());
+		nbt.setString(NBT_KEY_BLOCK_ID, block.getRegistryName().toString());
 	}
 	
 	public static Block getTargetBlock(ItemStack item) {
         if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
 		NBTTagCompound nbt = item.getTagCompound();
-        String blockId = nbt.getString("HDB|targetBlockId");
-        if(blockId == null || blockId.isEmpty()) return null;
+        String blockId = nbt.getString(NBT_KEY_BLOCK_ID);
+        if(blockId == null || blockId.isEmpty()) return Blocks.AIR;
         return Block.getBlockFromName(blockId);
 	}
 
@@ -418,52 +432,52 @@ public class ItemBlockExchanger extends ItemTool {
 	private static void setTargetItemStackMeta(ItemStack item, int meta) {
         if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
 		NBTTagCompound nbt = item.getTagCompound();
-		nbt.setInteger("HDB|targetBlockMeta", meta);
+		nbt.setInteger(NBT_KEY_BLOCK_META, meta);
 	}
 
     @Deprecated
 	public static int getTargetItemStackMeta(ItemStack item) {
         if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
 		NBTTagCompound nbt = item.getTagCompound();
-		return nbt.getInteger("HDB|targetBlockMeta");
+		return nbt.getInteger(NBT_KEY_BLOCK_META);
 	}
 
 	public static int getRange(ItemStack item) {
         if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
 		NBTTagCompound nbt = item.getTagCompound();
-		return nbt.getInteger("HDB|blockRange");
+		return nbt.getInteger(NBT_KEY_BLOCK_RANGE);
 	}
 	
 	private static void setRange(ItemStack item, int newRange) {
         if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
 		NBTTagCompound nbt = item.getTagCompound();
 		newRange = (HyperDimensionalBag.maxRange + 1 + newRange) % (HyperDimensionalBag.maxRange + 1);
-		nbt.setInteger("HDB|blockRange", newRange);
+		nbt.setInteger(NBT_KEY_BLOCK_RANGE, newRange);
 	}
 	
 	public static boolean isAllExchangeMode(ItemStack item) {
         if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
         NBTTagCompound nbt = item.getTagCompound();
-		return nbt.getBoolean("HDB|blockAllMode");
+		return nbt.getBoolean(NBT_KEY_BLOCK_ALL_MODE);
 	}
 	
 	private static void setAllExchangeMode(ItemStack item, boolean mode) {
         if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
 		NBTTagCompound nbt = item.getTagCompound();
-		nbt.setBoolean("HDB|blockAllMode", mode);
+		nbt.setBoolean(NBT_KEY_BLOCK_ALL_MODE, mode);
 	}
 
     public static int getBuildMode(ItemStack item) {
         if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
         NBTTagCompound nbt = item.getTagCompound();
-        return nbt.getInteger("HDB|buildMode");
+        return nbt.getInteger(NBT_KEY_BLOCK_BUILD_MODE);
     }
 
     private static void setBuildMode(ItemStack item, int mode) {
         if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
         NBTTagCompound nbt = item.getTagCompound();
         mode = (EnumBuildMode.getMODESLength() + mode) % (EnumBuildMode.getMODESLength());
-        nbt.setInteger("HDB|buildMode", mode);
+        nbt.setInteger(NBT_KEY_BLOCK_BUILD_MODE, mode);
     }
 
     public enum EnumBuildMode {
