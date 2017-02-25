@@ -37,7 +37,7 @@ public class InventoryBag implements IInventory {
     @Override
     @Nonnull
     public ItemStack decrStackSize(int index, int count) {
-        if (data.items.get(index) != ItemStack.EMPTY) {
+        if (!data.items.get(index).isEmpty()) {
             ItemStack itemStack;
             if (data.items.get(index).getCount() <= count) {
                 itemStack = data.items.get(index);

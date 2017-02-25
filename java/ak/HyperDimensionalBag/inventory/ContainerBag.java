@@ -43,7 +43,7 @@ public class ContainerBag extends Container {
     @Override
     public boolean canInteractWith(@Nonnull EntityPlayer entityplayer) {
         ItemStack item = entityplayer.getHeldItemMainhand();
-        return item != ItemStack.EMPTY && item.getItem() instanceof ItemHDBag && item.getItemDamage() == metaDmg;
+        return !item.isEmpty() && item.getItem() instanceof ItemHDBag && item.getItemDamage() == metaDmg;
     }
 
     @Override

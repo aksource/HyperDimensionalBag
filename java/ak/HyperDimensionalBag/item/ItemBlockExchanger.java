@@ -367,7 +367,7 @@ public class ItemBlockExchanger extends ItemTool {
 		ItemStack targetBlockStack = new ItemStack(getTargetBlock(exchangeItem), 1, getTargetItemStackMeta(exchangeItem));
         for(int i = 0; i < inv.getSizeInventory();i++) {
             ItemStack item = inv.getStackInSlot(i);
-            if (item == ItemStack.EMPTY) continue;
+            if (item.isEmpty()) continue;
             if (checkValidBlock(player.getEntityWorld(), pos, targetBlockStack, item)) {
                 item.shrink(-1);
                 if(item.getCount() == 0) inv.setInventorySlotContents(i, ItemStack.EMPTY);

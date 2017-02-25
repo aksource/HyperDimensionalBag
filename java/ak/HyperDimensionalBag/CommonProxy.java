@@ -16,7 +16,7 @@ public class CommonProxy implements IGuiHandler {
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
         if (ID == HyperDimensionalBag.guiID) {
             ItemStack heldItem = player.getHeldItemMainhand();
-            if (heldItem != ItemStack.EMPTY && heldItem.getItem() instanceof ItemHDBag) {
+            if (!heldItem.isEmpty() && heldItem.getItem() instanceof ItemHDBag) {
                 InventoryBag inventorybag = new InventoryBag(heldItem, world);
                 return new ContainerBag(player, inventorybag, heldItem.getItemDamage());
             } else return null;
@@ -27,7 +27,7 @@ public class CommonProxy implements IGuiHandler {
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
         if (ID == HyperDimensionalBag.guiID) {
             ItemStack heldItem = player.getHeldItemMainhand();
-            if (heldItem != ItemStack.EMPTY && heldItem.getItem() instanceof ItemHDBag) {
+            if (!heldItem.isEmpty() && heldItem.getItem() instanceof ItemHDBag) {
                 InventoryBag inventorybag = new InventoryBag(heldItem, world);
                 return new GuiBag(player, inventorybag, heldItem.getItemDamage());
             } else return null;

@@ -44,7 +44,7 @@ public class PlayerPickHook {
             if (itemStack != null && itemStack.getItem() instanceof ItemHDBag) {
                 data = new InventoryBag(itemStack, world);
                 for (int j = 0; j < data.getSizeInventory(); j++) {
-                    if (data.getStackInSlot(j) != ItemStack.EMPTY && data.getStackInSlot(j).getItem() instanceof ItemStorageBox
+                    if (!data.getStackInSlot(j).isEmpty() && data.getStackInSlot(j).getItem() instanceof ItemStorageBox
                             && ItemStorageBox.isAutoCollect(data.getStackInSlot(j))) {
                         storageStack = ItemStorageBox.peekItemStackAll(data.getStackInSlot(j));
                         if (storageStack != null && areOreNameEquals(item, storageStack)) {

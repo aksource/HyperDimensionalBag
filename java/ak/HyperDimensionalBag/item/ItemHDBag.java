@@ -28,7 +28,7 @@ public class ItemHDBag extends Item {
 
     public static BagData getBagData(ItemStack item, World world) {
         BagData data = null;
-        if (item != ItemStack.EMPTY && item.getItem() instanceof ItemHDBag) {
+        if (!item.isEmpty() && item.getItem() instanceof ItemHDBag) {
             data = ((ItemHDBag) item.getItem()).getData(item, world);
         }
         return data;
