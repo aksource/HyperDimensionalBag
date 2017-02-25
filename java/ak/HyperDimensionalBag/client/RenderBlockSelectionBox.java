@@ -36,7 +36,7 @@ public class RenderBlockSelectionBox {
     public void onRenderSelectionBox(DrawBlockHighlightEvent event) {
         ItemStack currentItem = event.getPlayer().getHeldItemMainhand();
         if (event.getTarget().typeOfHit == RayTraceResult.Type.BLOCK
-                && currentItem != null
+                && !currentItem.isEmpty()
                 && currentItem.getItem() instanceof ItemBlockExchanger) {
             List<BlockPos> list = new ArrayList<>();
             RayTraceResult MOP = event.getTarget();
