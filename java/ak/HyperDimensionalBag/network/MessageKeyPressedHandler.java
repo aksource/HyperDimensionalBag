@@ -13,7 +13,7 @@ import net.minecraft.item.ItemStack;
 public class MessageKeyPressedHandler implements IMessageHandler<MessageKeyPressed, IMessage> {
     @Override
     public IMessage onMessage(MessageKeyPressed message, MessageContext ctx) {
-        EntityPlayer player = ctx.getServerHandler().playerEntity;
+        EntityPlayer player = ctx.getServerHandler().player;
         ItemStack itemStack = player.getHeldItemMainhand();
         if (itemStack != ItemStack.EMPTY && itemStack.getItem() instanceof ItemBlockExchanger) {
             ItemBlockExchanger.onRightClickAction(itemStack, player, message.keyCtrlDwon);

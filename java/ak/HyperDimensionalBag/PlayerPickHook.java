@@ -25,13 +25,13 @@ public class PlayerPickHook {
             EntityPlayer player = event.getEntityPlayer();
             EntityItem item = event.getItem();
             NonNullList<ItemStack> inv = player.inventory.mainInventory;
-            if (pickUpItemInBag(player.getEntityWorld(), inv, item.getEntityItem())) {
+            if (pickUpItemInBag(player.getEntityWorld(), inv, item.getItem())) {
                 event.setCanceled(true);
                 player.getEntityWorld().playSound(player, new BlockPos(player.posX, player.posY, player.posZ),
                         SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS,
                         0.2F,
                         ((player.getEntityWorld().rand.nextFloat() - player.getEntityWorld().rand.nextFloat()) * 0.7F + 1.0F) * 2.0F);
-                int stackSize = item.getEntityItem().getCount();
+                int stackSize = item.getItem().getCount();
                 player.onItemPickup(item, stackSize);
             }
         }
