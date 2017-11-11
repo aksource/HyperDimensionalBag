@@ -110,7 +110,7 @@ public class RenderBlockSelectionBox {
             d2 = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * (double)partialTickItem;
             IBlockState state = world.getBlockState(blockPos);
             AxisAlignedBB axisAlignedBB = state.getSelectedBoundingBox(world, blockPos).expand(d3, d3, d3).offset(-d0, -d1, -d2);
-            RenderGlobal.drawOutlinedBoundingBox(axisAlignedBB, 0xFF, 0xFF, 0xFF, 0xFF);
+            RenderGlobal.drawSelectionBoundingBox(axisAlignedBB, 1.0F, 1.0F, 1.0F, 1.0F);
         }
         GlStateManager.depthMask(true);
         GlStateManager.enableTexture2D();
