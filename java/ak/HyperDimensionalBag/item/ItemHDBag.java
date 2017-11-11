@@ -13,8 +13,6 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 
@@ -41,11 +39,12 @@ public class ItemHDBag extends Item {
         return "item.HDBag." + String.valueOf(meta);
     }
 
-    @SideOnly(Side.CLIENT)
     @Override
-    public void getSubItems(@Nonnull Item itemIn, CreativeTabs tab, NonNullList<ItemStack> subItems) {
-        for (int i = 0; i < 16; i++)
-            subItems.add(new ItemStack(itemIn, 1, i));
+    public void getSubItems(@Nonnull CreativeTabs tab, @Nonnull NonNullList<ItemStack> items) {
+        if (tab == CreativeTabs.TOOLS) {
+            for (int i = 0; i < 16; i++)
+                items.add(new ItemStack(this, 1, i));
+        }
     }
 
     @Override

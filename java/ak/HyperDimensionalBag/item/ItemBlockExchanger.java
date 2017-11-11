@@ -6,6 +6,7 @@ import ak.HyperDimensionalBag.network.PacketHandler;
 import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -17,10 +18,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.storagebox.ItemStorageBox;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
@@ -29,6 +27,7 @@ import net.minecraftforge.common.util.Constants;
 import org.lwjgl.input.Keyboard;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -396,7 +395,8 @@ public class ItemBlockExchanger extends ItemTool {
         if (targetId == null || targetId == Blocks.AIR || player.isSneaking()) {
             setTargetBlock(itemStack, state.getBlock());
             setTargetItemStackMeta(itemStack, blockMeta);
-            List<ItemStack> drops = targetId.getDrops(worldIn, blockPos, state, 0);
+            NonNullList<ItemStack> drops = NonNullList.create();
+            targetId.getDrops(drops, worldIn, blockPos, state, 0);
             setTargetItemStackDrops(itemStack, drops);
             if (!worldIn.isRemote) {
                 String registerBlock = String.format("Register block : %s", state.getBlock().getLocalizedName());
@@ -442,11 +442,11 @@ public class ItemBlockExchanger extends ItemTool {
     }
 
     @Override
-    public void addInformation(ItemStack itemStack, EntityPlayer playerIn, List<String> tooltip, boolean advanced) {
-        int range = 1 + getRange(itemStack) * 2;
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+        int range = 1 + getRange(stack) * 2;
         String blockRange = String.format("Range : %d*%d", range, range);
-        Block block = getTargetBlock(itemStack);
-        int meta = getTargetItemStackMeta(itemStack);
+        Block block = getTargetBlock(stack);
+        int meta = getTargetItemStackMeta(stack);
         String blockName;
         if (block != null && block != Blocks.AIR) {
             ItemStack targetBlockStack = new ItemStack(block, 1, meta);
@@ -454,7 +454,7 @@ public class ItemBlockExchanger extends ItemTool {
         } else {
             blockName = "Target Block is not set";
         }
-        String mode = String.format("Build Mode : %s", EnumBuildMode.getMode(getBuildMode(itemStack)).name());
+        String mode = String.format("Build Mode : %s", EnumBuildMode.getMode(getBuildMode(stack)).name());
 
         tooltip.add(blockName);
         tooltip.add(blockRange);

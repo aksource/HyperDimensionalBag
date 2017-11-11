@@ -1,6 +1,6 @@
 {
     "parent": "item/handheld",
     "textures": {
-        "layer0": "hyperdimensionalbag:items/bag"
+        "layer0": "hyperdimensionalbag:items/hyper-dimensional-bag"
     }
 }

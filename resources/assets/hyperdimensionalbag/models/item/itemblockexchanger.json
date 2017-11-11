@@ -1,6 +1,6 @@
 {
     "parent": "item/handheld",
     "textures": {
-        "layer0": "hyperdimensionalbag:items/blockexchanger"
+        "layer0": "hyperdimensionalbag:items/block-exchanger"
     }
 }
