@@ -391,12 +391,15 @@ public class ItemBlockExchanger extends ItemTool {
         ItemStack itemStack = player.getHeldItem(hand);
         IBlockState state = worldIn.getBlockState(blockPos);
         int blockMeta = state.getBlock().getMetaFromState(state);
-        Block targetId = getTargetBlock(itemStack);
+        Block targetBlock = getTargetBlock(itemStack);
         ItemStack targetBlockStack = new ItemStack(state.getBlock(), 1, blockMeta);
-        if (targetId == null || targetId == Blocks.AIR || player.isSneaking()) {
+        if (targetBlock == null
+                || targetBlock == Blocks.AIR
+                || player.isSneaking()) {
+            targetBlock = state.getBlock();
             setTargetBlock(itemStack, state.getBlock());
             setTargetItemStackMeta(itemStack, blockMeta);
-            List<ItemStack> drops = targetId.getDrops(worldIn, blockPos, state, 0);
+            List<ItemStack> drops = targetBlock.getDrops(worldIn, blockPos, state, 0);
             setTargetItemStackDrops(itemStack, drops);
             if (!worldIn.isRemote) {
                 String registerBlock = String.format("Register block : %s", state.getBlock().getLocalizedName());
