@@ -3,7 +3,6 @@ package ak.HyperDimensionalBag.item;
 import ak.HyperDimensionalBag.HyperDimensionalBag;
 import ak.HyperDimensionalBag.network.MessageKeyPressed;
 import ak.HyperDimensionalBag.network.PacketHandler;
-import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.util.ITooltipFlag;
@@ -330,11 +329,11 @@ public class ItemBlockExchanger extends ItemTool {
         }
     }
 
-    private static List<ItemStack> getTargetItemStackDrops(ItemStack item) {
+    private static NonNullList<ItemStack> getTargetItemStackDrops(ItemStack item) {
         if (!item.hasTagCompound()) item.setTagCompound(new NBTTagCompound());
         NBTTagCompound nbt = item.getTagCompound();
         NBTTagList tagList = nbt.getTagList(NBT_KEY_BLOCK_DROPS, Constants.NBT.TAG_COMPOUND);
-        List<ItemStack> drops = Lists.newArrayList();
+        NonNullList<ItemStack> drops = NonNullList.create();
         for (int i = 0; i < tagList.tagCount(); i++) {
             NBTTagCompound compound = tagList.getCompoundTagAt(i);
             String blockId = compound.getString(NBT_KEY_BLOCK_ID);
@@ -390,13 +389,16 @@ public class ItemBlockExchanger extends ItemTool {
         ItemStack itemStack = player.getHeldItem(hand);
         IBlockState state = worldIn.getBlockState(blockPos);
         int blockMeta = state.getBlock().getMetaFromState(state);
-        Block targetId = getTargetBlock(itemStack);
+        Block targetBlock = getTargetBlock(itemStack);
         ItemStack targetBlockStack = new ItemStack(state.getBlock(), 1, blockMeta);
-        if (targetId == null || targetId == Blocks.AIR || player.isSneaking()) {
+        if (targetBlock == null
+                || targetBlock == Blocks.AIR
+                || player.isSneaking()) {
+            targetBlock = state.getBlock();
             setTargetBlock(itemStack, state.getBlock());
             setTargetItemStackMeta(itemStack, blockMeta);
             NonNullList<ItemStack> drops = NonNullList.create();
-            targetId.getDrops(drops, worldIn, blockPos, state, 0);
+            targetBlock.getDrops(drops, worldIn, blockPos, state, 0);
             setTargetItemStackDrops(itemStack, drops);
             if (!worldIn.isRemote) {
                 String registerBlock = String.format("Register block : %s", state.getBlock().getLocalizedName());
