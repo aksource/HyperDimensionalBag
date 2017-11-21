@@ -59,6 +59,7 @@ public class HyperDimensionalBag {
 
         MinecraftForge.EVENT_BUS.register(new RegistrationUtils());
         PacketHandler.init();
+        MinecraftForge.EVENT_BUS.register(new Recipes());
     }
 
     @Mod.EventHandler
@@ -67,7 +68,6 @@ public class HyperDimensionalBag {
         MinecraftForge.EVENT_BUS.register(new PlayerPickHook());
         NetworkRegistry.INSTANCE.registerGuiHandler(this, proxy);
         proxy.registerClientInfo();
-        MinecraftForge.EVENT_BUS.register(new Recipes());
     }
 
     @Mod.EventHandler
