@@ -41,7 +41,7 @@ public class ItemHDBag extends Item {
 
     @Override
     public void getSubItems(@Nonnull CreativeTabs tab, @Nonnull NonNullList<ItemStack> items) {
-        if (tab == CreativeTabs.TOOLS) {
+        if (tab == CreativeTabs.TOOLS || tab == CreativeTabs.SEARCH) {
             for (int i = 0; i < 16; i++)
                 items.add(new ItemStack(this, 1, i));
         }
