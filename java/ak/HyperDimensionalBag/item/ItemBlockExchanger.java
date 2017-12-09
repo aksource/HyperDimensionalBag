@@ -257,7 +257,7 @@ public class ItemBlockExchanger extends ItemTool {
             ItemStack item = inv.getStackInSlot(i);
             if (item.isEmpty()) continue;
             if (checkValidBlock(targetBlockStack, item, drops)) {
-                item.shrink(-1);
+                item.shrink(1);
                 if (item.getCount() == 0) inv.setInventorySlotContents(i, ItemStack.EMPTY);
                 return true;
             } else if (HyperDimensionalBag.loadSB
