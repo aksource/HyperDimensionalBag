@@ -1,0 +1,24 @@
+{
+  "type": "crafting_shaped",
+  "group": "hyperdimensionalbag.itemblockexchanger",
+  "pattern": [
+    " DE", " ID", "S  "
+  ],
+  "key": {
+    "E": {
+      "item": "minecraft:emerald_block"
+    },
+    "D": {
+      "item": "minecraft:diamond_block"
+    },
+    "I": {
+      "item": "minecraft:iron_block"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "hyperdimensionalbag:itemblockexchanger"
+  }
+}

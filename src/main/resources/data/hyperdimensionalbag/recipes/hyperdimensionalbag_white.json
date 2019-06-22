@@ -1,0 +1,21 @@
+{
+  "type": "crafting_shaped",
+  "group": "hyperdimensionalbag.hyperdimantionalbag",
+  "pattern": [
+    "LDL", "DCD", "LDL"
+  ],
+  "key": {
+    "L": {
+      "item": "minecraft:leather"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "C": {
+      "item": "minecraft:chest"
+    }
+  },
+  "result": {
+    "item": "hyperdimensionalbag:hyperdimensionalbag_white"
+  }
+}

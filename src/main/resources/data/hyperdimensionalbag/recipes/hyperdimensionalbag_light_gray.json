@@ -1,0 +1,15 @@
+{
+  "type": "crafting_shapeless",
+  "group": "hyperdimensionalbag.dyed_hyperdimensionalbag",
+  "ingredients": [
+    {
+      "item": "minecraft:light_gray_dye"
+    },
+    {
+      "item": "hyperdimensionalbag:hyperdimensionalbag_white"
+    }
+  ],
+  "result": {
+    "item": "hyperdimensionalbag:hyperdimensionalbag_light_gray"
+  }
+}

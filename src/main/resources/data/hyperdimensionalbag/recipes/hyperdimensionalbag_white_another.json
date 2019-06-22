@@ -1,0 +1,15 @@
+{
+  "type": "crafting_shapeless",
+  "group": "hyperdimensionalbag.dyed_hyperdimantionalbag",
+  "ingredients": [
+    {
+      "item": "minecraft:bone_meal"
+    },
+    {
+      "tag": "hyperdimensionalbag:hyperdimensionalbag"
+    }
+  ],
+  "result": {
+    "item": "hyperdimensionalbag:hyperdimensionalbag_white"
+  }
+}

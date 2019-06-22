@@ -1,0 +1,21 @@
+{
+  "item.hyperdimensionalbag.hyperdimensionalbag": "HyperDimensionalBag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_black": "Black HyperDimensional Bag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_red": "Red HyperDimensional Bag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_green": "Green HyperDimensional Bag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_brown": "Brown HyperDimensional Bag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_blue": "Blue HyperDimensional Bag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_purple": "Purple HyperDimensional Bag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_cyan": "Cyan HyperDimensional Bag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_light_gray": "Light Gray HyperDimensional Bag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_gray": "Gray HyperDimensional Bag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_pink": "Pink HyperDimensional Bag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_lime": "Lime HyperDimensional Bag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_yellow": "Yellow HyperDimensional Bag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_light_blue": "Light Blue HyperDimensional Bag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_magenta": "Magenta HyperDimensional Bag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_orange": "Orange HyperDimensional Bag",
+  "item.hyperdimensionalbag.hyperdimensionalbag_white": "White HyperDimensional Bag",
+  "item.hyperdimensionalbag.itemblockexchanger": "BlockExchanger",
+  "key.hyperdimensionalbag.left_control": "Function Key"
+}
