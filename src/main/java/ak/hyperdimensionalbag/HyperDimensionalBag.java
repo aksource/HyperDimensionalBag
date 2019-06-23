@@ -38,7 +38,7 @@ public class HyperDimensionalBag {
 
     MinecraftForge.EVENT_BUS.register(new RegistrationUtils());
     MinecraftForge.EVENT_BUS.register(new PlayerPickHook());
-    MinecraftForge.EVENT_BUS.register(new WorldLoadHook());
+    MinecraftForge.EVENT_BUS.register(proxy);
     ModLoadingContext.get()
         .registerExtensionPoint(ExtensionPoint.GUIFACTORY, () -> ClientProxy::openGui);
     ModLoadingContext.get().registerConfig(Type.COMMON, ConfigUtils.configSpec);

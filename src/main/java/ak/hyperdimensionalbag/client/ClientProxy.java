@@ -15,9 +15,8 @@ import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.IWorld;
+import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.WorldEvent.Load;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -53,5 +52,24 @@ public class ClientProxy extends CommonProxy {
   public void registerClientInfo(final FMLClientSetupEvent event) {
     MinecraftForge.EVENT_BUS.register(new RenderBlockSelectionBox());
     ClientRegistry.registerKeyBinding(CTRL_KEY);
+  }
+
+  @SubscribeEvent
+  @SuppressWarnings("unused")
+  public void onColorHandler(final ColorHandlerEvent.Item event) {
+    event.getItemColors().register(new ItemHDBagColorManager(),
+        RegistrationUtils.itemHDBagList.toArray(new Item[]{}));
+  }
+
+  public static class ItemHDBagColorManager implements IItemColor {
+
+    @Override
+    public int getColor(ItemStack itemStack, int tintIndex) {
+      Item item = itemStack.getItem();
+      if (item instanceof ItemHDBag) {
+        return ((ItemHDBag) item).getDyeColor().getMapColor().colorValue;
+      }
+      return 0;
+    }
   }
 }
