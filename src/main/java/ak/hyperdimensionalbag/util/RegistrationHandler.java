@@ -22,7 +22,6 @@ import static ak.hyperdimensionalbag.HyperDimensionalBag.MOD_ID;
 /**
  * 登録処理用クラス Created by A.K. on 16/05/29.
  */
-@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 @ParametersAreNonnullByDefault
 public class RegistrationHandler {
 
