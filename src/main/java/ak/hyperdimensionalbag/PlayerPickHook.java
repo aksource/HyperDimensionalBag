@@ -1,15 +1,15 @@
 package ak.hyperdimensionalbag;
 
-import ak.hyperdimensionalbag.inventory.InventoryBag;
-import java.util.Collection;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
+import ak.hyperdimensionalbag.inventory.BagInventory;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
@@ -17,20 +17,25 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Collection;
+
 @Mod.EventBusSubscriber(bus = Bus.FORGE)
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class PlayerPickHook {
 
   @SubscribeEvent
   @SuppressWarnings("unused")
   public static void pickUpEvent(final EntityItemPickupEvent event) {
     if (HyperDimensionalBag.loadSB) {
-      EntityPlayer player = event.getEntityPlayer();
-      EntityItem item = event.getItem();
+      PlayerEntity player = event.getPlayer();
+      ItemEntity item = event.getItem();
       NonNullList<ItemStack> inv = player.inventory.mainInventory;
       if (pickUpItemInBag(player.getEntityWorld(), inv, item.getItem())) {
         event.setCanceled(true);
         player.getEntityWorld()
-            .playSound(player, new BlockPos(player.posX, player.posY, player.posZ),
+            .playSound(player, new BlockPos(player.getPosX(), player.getPosY(), player.getPosZ()),
                 SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS,
                 0.2F,
                 ((player.getEntityWorld().rand.nextFloat() - player.getEntityWorld().rand
@@ -42,7 +47,7 @@ public class PlayerPickHook {
   }
 
   private static boolean pickUpItemInBag(World world, NonNullList<ItemStack> inv, ItemStack item) {
-    InventoryBag data;
+    BagInventory data;
     ItemStack storageStack;
 //    for (ItemStack itemStack : inv) {
 //      if (itemStack != null && itemStack.getItem() instanceof ItemHDBag) {

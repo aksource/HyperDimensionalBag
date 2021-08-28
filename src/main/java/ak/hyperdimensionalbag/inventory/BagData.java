@@ -1,14 +1,15 @@
 package ak.hyperdimensionalbag.inventory;
 
-import javax.annotation.Nonnull;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.util.Constants;
+
+import javax.annotation.Nonnull;
 
 public class BagData extends WorldSavedData {
 
@@ -29,7 +30,7 @@ public class BagData extends WorldSavedData {
     super(strWorldSavedData);
   }
 
-  public void onUpdate(World world, EntityPlayer player) {
+  public void onUpdate(World world, PlayerEntity player) {
     if (!this.init) {
       this.init = true;
     }
@@ -43,11 +44,11 @@ public class BagData extends WorldSavedData {
   }
 
   @Override
-  public void read(@Nonnull NBTTagCompound nbtTagCompound) {
-    NBTTagList itemTagList = nbtTagCompound.getList(NBT_KEY_ITEMS, Constants.NBT.TAG_COMPOUND);
+  public void read(@Nonnull CompoundNBT nbtTagCompound) {
+    ListNBT itemTagList = nbtTagCompound.getList(NBT_KEY_ITEMS, Constants.NBT.TAG_COMPOUND);
 
     for (int tagIndex = 0; tagIndex < itemTagList.size(); ++tagIndex) {
-      NBTTagCompound itemNBT = itemTagList.getCompound(tagIndex);
+      CompoundNBT itemNBT = itemTagList.getCompound(tagIndex);
       int i = itemNBT.getByte(NBT_KEY_SLOT) & 255;
 
       if (i < this.items.size()) {
@@ -58,18 +59,18 @@ public class BagData extends WorldSavedData {
 
   @Override
   @Nonnull
-  public NBTTagCompound write(@Nonnull NBTTagCompound nbtTagCompound) {
-    NBTTagList nbtTagList = new NBTTagList();
+  public CompoundNBT write(@Nonnull CompoundNBT nbtTagCompound) {
+    ListNBT nbtTagList = new ListNBT();
 
     for (int i = 0; i < this.items.size(); ++i) {
       if (this.items.get(i) != ItemStack.EMPTY) {
-        NBTTagCompound item = new NBTTagCompound();
-        item.setByte(NBT_KEY_SLOT, (byte) i);
+        CompoundNBT item = new CompoundNBT();
+        item.putByte(NBT_KEY_SLOT, (byte) i);
         this.items.get(i).write(item);
         nbtTagList.add(item);
       }
     }
-    nbtTagCompound.setTag(NBT_KEY_ITEMS, nbtTagList);
+    nbtTagCompound.put(NBT_KEY_ITEMS, nbtTagList);
     return nbtTagCompound;
   }
 

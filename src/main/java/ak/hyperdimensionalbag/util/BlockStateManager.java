@@ -1,18 +1,18 @@
 package ak.hyperdimensionalbag.util;
 
-import static ak.hyperdimensionalbag.item.ItemBlockExchanger.NBT_KEY_BLOCK_STATE;
-
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTUtil;
+
+import static ak.hyperdimensionalbag.item.BlockExchangerItem.NBT_KEY_BLOCK_STATE;
 
 /**
  * BlockState用マネージャークラス Created by A.K. on 14/12/29.
  */
 public class BlockStateManager {
 
-  public static void addBlockStateToNBT(ItemStack itemStack, IBlockState blockState) {
-    itemStack.getOrCreateTag().setTag(NBT_KEY_BLOCK_STATE, NBTUtil.writeBlockState(blockState));
+  public static void addBlockStateToNBT(ItemStack itemStack, BlockState blockState) {
+    itemStack.getOrCreateTag().put(NBT_KEY_BLOCK_STATE, NBTUtil.writeBlockState(blockState));
   }
 
 //  public static NBTTagList getTagList(IBlockState blockState) {
@@ -26,8 +26,8 @@ public class BlockStateManager {
 //    return nbtTagList;
 //  }
 
-  public static IBlockState setBlockStateFromNBT(ItemStack itemStack, IBlockState defaultState) {
-    if (itemStack.hasTag() && itemStack.getTag().hasKey(NBT_KEY_BLOCK_STATE)) {
+  public static BlockState setBlockStateFromNBT(ItemStack itemStack, BlockState defaultState) {
+    if (itemStack.hasTag() && itemStack.getTag().contains(NBT_KEY_BLOCK_STATE)) {
       return NBTUtil.readBlockState(itemStack.getTag().getCompound(NBT_KEY_BLOCK_STATE));
     }
     return defaultState;

@@ -6,42 +6,42 @@ import ak.hyperdimensionalbag.network.MessageKeyPressed;
 import ak.hyperdimensionalbag.network.PacketHandler;
 import ak.hyperdimensionalbag.util.ObjectUtils;
 import ak.hyperdimensionalbag.util.StorageBoxUtils;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.*;
+import net.minecraft.loot.LootContext;
+import net.minecraft.loot.LootParameters;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.util.Constants;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemTier;
-import net.minecraft.item.ItemTool;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.Constants;
 
-public class ItemBlockExchanger extends ItemTool {
+import static net.minecraft.block.Blocks.AIR;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public class BlockExchangerItem extends ToolItem {
 
   public static final String NBT_KEY_BLOCK_STATE = "HDB|blockstate";
   private static final String NBT_KEY_BLOCK_ID = "HDB|targetBlockId";
@@ -51,33 +51,33 @@ public class ItemBlockExchanger extends ItemTool {
   private static final String NBT_KEY_BLOCK_ALL_MODE = "HDB|blockAllMode";
   private static final String NBT_KEY_BLOCK_BUILD_MODE = "HDB|buildMode";
 
-  public ItemBlockExchanger() {
+  public BlockExchangerItem() {
     super(1.0F, 1.0F, ItemTier.DIAMOND, new HashSet<>(),
-        new Item.Properties().group(ItemGroup.TOOLS).setNoRepair());
+            new Item.Properties().group(ItemGroup.TOOLS).setNoRepair());
   }
 
   /**
    * do mouse right click action.<br> called on {@link ak.hyperdimensionalbag.network.MessageKeyPressedHandler}
    *
-   * @param itemStack ItemExchanger ItemStack instance
-   * @param player EntityPlayer instance
+   * @param itemStack  ItemExchanger ItemStack instance
+   * @param player     PlayerEntity instance
    * @param keyPressed true: left Ctrl key is pressed
    */
-  public static void onRightClickAction(ItemStack itemStack, EntityPlayer player,
-      boolean keyPressed) {
+  public static void onRightClickAction(ItemStack itemStack, PlayerEntity player,
+                                        boolean keyPressed) {
     if (keyPressed) {
       if (player.isSneaking()) {
         setAllExchangeMode(itemStack, !isAllExchangeMode(itemStack));
         String allExchangeMode = String
-            .format("All Exchange Mode : %b", isAllExchangeMode(itemStack));
-        player.sendMessage(new TextComponentString(allExchangeMode));
+                .format("All Exchange Mode : %b", isAllExchangeMode(itemStack));
+        player.sendMessage(new StringTextComponent(allExchangeMode), player.getUniqueID());
       } else {
         int nowMode = getBuildMode(itemStack);
         nowMode++;
         setBuildMode(itemStack, nowMode);
         String buildMode = String
-            .format("Builder Mode : %s", EnumBuildMode.getMode(getBuildMode(itemStack)).name());
-        player.sendMessage(new TextComponentString(buildMode));
+                .format("Builder Mode : %s", BuildMode.getMode(getBuildMode(itemStack)).name());
+        player.sendMessage(new StringTextComponent(buildMode), player.getUniqueID());
       }
     } else {
       int nowRange = getRange(itemStack);
@@ -86,12 +86,12 @@ public class ItemBlockExchanger extends ItemTool {
       setRange(itemStack, nowRange);
       int range = 1 + getRange(itemStack) * 2;
       String blockRange = String.format("Range : %d*%d", range, range);
-      player.sendMessage(new TextComponentString(blockRange));
+      player.sendMessage(new StringTextComponent(blockRange), player.getUniqueID());
     }
   }
 
-  public static List<BlockPos> getNextWallBlockPosList(World world, EntityPlayer player,
-      BlockPos originPosition, EnumFacing side, int range, boolean allMode) {
+  public static List<BlockPos> getNextWallBlockPosList(World world, PlayerEntity player,
+                                                       BlockPos originPosition, Direction side, int range, boolean allMode) {
     List<BlockPos> list = new ArrayList<>();
     //ターゲットしたブロックの面に接するブロックの座標
     BlockPos blockPos = originPosition.offset(side);
@@ -104,9 +104,9 @@ public class ItemBlockExchanger extends ItemTool {
 
     int start = 0;
     int end = range * 2;
-    if (side == EnumFacing.DOWN || side == EnumFacing.UP) {
-      double centerDifX = Math.abs(originPosition.getX() + 0.5D - player.posX);
-      double centerDifZ = Math.abs(originPosition.getZ() + 0.5D - player.posZ);
+    if (side == Direction.DOWN || side == Direction.UP) {
+      double centerDifX = Math.abs(originPosition.getX() + 0.5D - player.getPosX());
+      double centerDifZ = Math.abs(originPosition.getZ() + 0.5D - player.getPosZ());
 
       if (centerDifX < centerDifZ) {
         dz = 0;
@@ -128,8 +128,8 @@ public class ItemBlockExchanger extends ItemTool {
     for (int axis1 = start; axis1 <= end; axis1++) {
       for (int axis2 = -range; axis2 <= range; axis2++) {
         blockPos1 = blockPos.add(offsetX * axis1 + dx * axis2, offsetY * axis1 + dy * axis2,
-            offsetZ * axis1 + dz * axis2);
-        if (world.getBlockState(blockPos1).getBlock() == Blocks.AIR || allMode) {
+                offsetZ * axis1 + dz * axis2);
+        if (world.getBlockState(blockPos1).getBlock() == AIR || allMode) {
           list.add(blockPos1);
         }
       }
@@ -138,21 +138,21 @@ public class ItemBlockExchanger extends ItemTool {
   }
 
   public static List<BlockPos> getNextPillarBlockPosList(World world, BlockPos originPosition,
-      EnumFacing side, int range, boolean allMode) {
+                                                         Direction side, int range, boolean allMode) {
     List<BlockPos> list = new ArrayList<>();
     BlockPos blockPos = originPosition.offset(side);
     BlockPos blockPos1;
     for (int axis1 = 0; axis1 <= range * 2; axis1++) {
       blockPos1 = blockPos.offset(side, axis1);
-      if (world.getBlockState(blockPos1).getBlock() == Blocks.AIR || allMode) {
+      if (world.getBlockState(blockPos1).getBlock() == AIR || allMode) {
         list.add(blockPos1);
       }
     }
     return list;
   }
 
-  public static List<BlockPos> getNextCubeBlockPosList(World world, EntityPlayer player,
-      BlockPos originPosition, EnumFacing side, int range, boolean allMode) {
+  public static List<BlockPos> getNextCubeBlockPosList(World world, PlayerEntity player,
+                                                       BlockPos originPosition, Direction side, int range, boolean allMode) {
     List<BlockPos> list = new ArrayList<>();
     BlockPos blockPos = originPosition.offset(side);
     int offsetX = side.getXOffset();
@@ -169,11 +169,11 @@ public class ItemBlockExchanger extends ItemTool {
     int end = range * 2;
     int start1 = 0;
     int end1 = range * 2;
-    if (side == EnumFacing.DOWN || side == EnumFacing.UP) {
-      double centerDifX = Math.abs(originPosition.getX() + 0.5D - player.posX);
-      double signX = Math.signum(originPosition.getX() + 0.5D - player.posX);
-      double centerDifZ = Math.abs(originPosition.getZ() + 0.5D - player.posZ);
-      double signZ = Math.signum(originPosition.getZ() + 0.5D - player.posZ);
+    if (side == Direction.DOWN || side == Direction.UP) {
+      double centerDifX = Math.abs(originPosition.getX() + 0.5D - player.getPosX());
+      double signX = Math.signum(originPosition.getX() + 0.5D - player.getPosX());
+      double centerDifZ = Math.abs(originPosition.getZ() + 0.5D - player.getPosZ());
+      double signZ = Math.signum(originPosition.getZ() + 0.5D - player.getPosZ());
 
       if (centerDifX < centerDifZ) {
         dz = dx1 = 0;
@@ -208,9 +208,9 @@ public class ItemBlockExchanger extends ItemTool {
       for (int axis1 = start; axis1 <= end; axis1++) {
         for (int axis2 = -range; axis2 <= range; axis2++) {
           blockPos1 = blockPos.add(offsetX * axis1 + dx * axis2 + dx1 * axis0,
-              offsetY * axis1 + dy * axis2 + dy1 * axis0,
-              offsetZ * axis1 + dz * axis2 + dz1 * axis0);
-          if (world.getBlockState(blockPos1).getBlock() == Blocks.AIR || allMode) {
+                  offsetY * axis1 + dy * axis2 + dy1 * axis0,
+                  offsetZ * axis1 + dz * axis2 + dz1 * axis0);
+          if (world.getBlockState(blockPos1).getBlock() == AIR || allMode) {
             list.add(blockPos1);
           }
         }
@@ -219,63 +219,63 @@ public class ItemBlockExchanger extends ItemTool {
     return list;
   }
 
-  private static void putBlockToBlockPosList(World world, EntityPlayer player, List<BlockPos> list,
-      ItemStack exchangeItem, ItemStack target, boolean allMode) {
+  private static void putBlockToBlockPosList(World world, PlayerEntity player, List<BlockPos> list,
+                                             ItemStack exchangeItem, ItemStack target, boolean allMode) {
     for (BlockPos blockPos : list) {
-      IBlockState state = world.getBlockState(blockPos);
+      BlockState state = world.getBlockState(blockPos);
       Block block = state.getBlock();
       ItemStack nowBlock = new ItemStack(block);
-      if (target.isItemEqual(nowBlock) || (block != Blocks.AIR && !allMode)) {
+      if (target.isItemEqual(nowBlock) || (block != AIR && !allMode)) {
         continue;
       }
 
       if (decreaseBlockFromInventory(exchangeItem, player)) {
         Block targetBlock = getTargetBlock(exchangeItem);
-        IBlockState targetState = targetBlock.getDefaultState();
+        BlockState targetState = targetBlock.getDefaultState();
         world.setBlockState(blockPos, targetState, 3);
-        if (block != Blocks.AIR) {
+        if (block != AIR) {
           block.onBlockHarvested(world, blockPos, targetState, player);
           block.onPlayerDestroy(world, blockPos, targetState);
           if (!player.abilities.isCreativeMode) {
             TileEntity tile = world.getTileEntity(blockPos);
-            block.harvestBlock(world, player, new BlockPos(player.posX, player.posY, player.posZ),
-                state, tile, player.getHeldItemMainhand());
+            block.harvestBlock(world, player, new BlockPos(player.getPosX(), player.getPosY(), player.getPosZ()),
+                    state, tile, player.getHeldItemMainhand());
           }
         }
       }
     }
   }
 
-  public static BlockPos getNextBlockPos(BlockPos pos, EnumFacing side) {
+  public static BlockPos getNextBlockPos(BlockPos pos, Direction side) {
     return new BlockPos(pos).offset(side);
   }
 
   public static boolean checkBlockInRange(ItemStack item, BlockPos check, BlockPos origin) {
     return Math.abs(check.getX() - origin.getX()) <= getRange(item)
-        && Math.abs(check.getY() - origin.getY()) <= getRange(item)
-        && Math.abs(check.getZ() - origin.getZ()) <= getRange(item);
+            && Math.abs(check.getY() - origin.getY()) <= getRange(item)
+            && Math.abs(check.getZ() - origin.getZ()) <= getRange(item);
   }
 
   @SuppressWarnings("deprecated")
   public static boolean isVisibleBlock(World world, BlockPos pos) {
     return ConfigUtils.COMMON.exchangeInvisibleBlock
-        || world.getBlockState(pos).getBlock() == Blocks.AIR || !world.getBlockState(pos).getBlock()
-        .isOpaqueCube(world.getBlockState(pos), world, pos);
+            || world.getBlockState(pos).getBlock() == AIR || !world.getBlockState(pos).getBlock()
+            .isTransparent(world.getBlockState(pos));
   }
 
-  private static boolean exchangeBlock(World world, EntityPlayer player, ItemStack item,
-      BlockPos pos, ItemStack firstFocusBlock) {
-    IBlockState state = world.getBlockState(pos);
+  private static boolean exchangeBlock(World world, PlayerEntity player, ItemStack item,
+                                       BlockPos pos, ItemStack firstFocusBlock) {
+    BlockState state = world.getBlockState(pos);
     Block block = state.getBlock();
-    if (block == Blocks.AIR) {
+    if (block == AIR) {
       return false;
     }
     ItemStack nowBlock = new ItemStack(block);
     Block targetBlock = getTargetBlock(item);
     ItemStack targetBlockStack = new ItemStack(targetBlock);
-    IBlockState targetState = targetBlock.getDefaultState();
+    BlockState targetState = targetBlock.getDefaultState();
     if (targetBlockStack.isItemEqual(nowBlock) || (!isAllExchangeMode(item) && !firstFocusBlock
-        .isItemEqual(nowBlock))) {
+            .isItemEqual(nowBlock))) {
       return false;
     }
     if (decreaseBlockFromInventory(item, player) && world.setBlockState(pos, targetState, 3)) {
@@ -284,9 +284,9 @@ public class ItemBlockExchanger extends ItemTool {
       if (!player.abilities.isCreativeMode) {
         TileEntity tile = world.getTileEntity(pos);
         block
-            .harvestBlock(world, player, new BlockPos(player.posX, player.posY, player.posZ),
-                state,
-                tile, player.getHeldItemMainhand());
+                .harvestBlock(world, player, new BlockPos(player.getPosX(), player.getPosY(), player.getPosZ()),
+                        state,
+                        tile, player.getHeldItemMainhand());
       }
       return true;
     } else {
@@ -294,11 +294,11 @@ public class ItemBlockExchanger extends ItemTool {
     }
   }
 
-  private static boolean decreaseBlockFromInventory(ItemStack exchangeItem, EntityPlayer player) {
+  private static boolean decreaseBlockFromInventory(ItemStack exchangeItem, PlayerEntity player) {
     if (player.abilities.isCreativeMode) {
       return true;
     }
-    InventoryPlayer inv = player.inventory;
+    PlayerInventory inv = player.inventory;
     ItemStack targetBlockStack = new ItemStack(getTargetBlock(exchangeItem), 1);
     List<ItemStack> drops = getTargetItemStackDrops(exchangeItem);
     for (int i = 0; i < inv.getSizeInventory(); i++) {
@@ -325,7 +325,7 @@ public class ItemBlockExchanger extends ItemTool {
       return false;
     } else {
       for (ItemStack item : drops) {
-        if (item.getItem() instanceof ItemBlock && item.isItemEqual(check)) {
+        if (item.getItem() instanceof BlockItem && item.isItemEqual(check)) {
           return true;
         }
       }
@@ -334,22 +334,22 @@ public class ItemBlockExchanger extends ItemTool {
   }
 
   private static void setTargetBlock(ItemStack item, Block block) {
-    NBTTagCompound nbt = item.getOrCreateTag();
-    nbt.setString(NBT_KEY_BLOCK_ID, Objects.requireNonNull(block.getRegistryName()).toString());
+    CompoundNBT nbt = item.getOrCreateTag();
+    nbt.putString(NBT_KEY_BLOCK_ID, Objects.requireNonNull(block.getRegistryName()).toString());
   }
 
   public static Block getTargetBlock(ItemStack item) {
-    NBTTagCompound nbt = item.getOrCreateTag();
+    CompoundNBT nbt = item.getOrCreateTag();
     String blockId = nbt.getString(NBT_KEY_BLOCK_ID);
     if (blockId.isEmpty()) {
-      return Blocks.AIR;
+      return AIR;
     }
     return ObjectUtils.getBlock(blockId);
   }
 
   @Deprecated
   public static int getTargetItemStackMeta(ItemStack item) {
-    NBTTagCompound nbt = item.getOrCreateTag();
+    CompoundNBT nbt = item.getOrCreateTag();
     return nbt.getInt(NBT_KEY_BLOCK_META);
   }
 
@@ -357,25 +357,25 @@ public class ItemBlockExchanger extends ItemTool {
     if (drops == null || drops.isEmpty()) {
       return;
     }
-    NBTTagCompound nbt = item.getOrCreateTag();
-    NBTTagList tagList = new NBTTagList();
+    CompoundNBT nbt = item.getOrCreateTag();
+    ListNBT tagList = new ListNBT();
     for (ItemStack itemStack : drops) {
-      if (itemStack.getItem() instanceof ItemBlock) {
-        NBTTagCompound compound = new NBTTagCompound();
-        compound.setString(NBT_KEY_BLOCK_ID, Objects
-            .requireNonNull(itemStack.getItem().getRegistryName()).toString());
+      if (itemStack.getItem() instanceof BlockItem) {
+        CompoundNBT compound = new CompoundNBT();
+        compound.putString(NBT_KEY_BLOCK_ID, Objects
+                .requireNonNull(itemStack.getItem().getRegistryName()).toString());
         tagList.add(compound);
       }
     }
-    nbt.setTag(NBT_KEY_BLOCK_DROPS, tagList);
+    nbt.put(NBT_KEY_BLOCK_DROPS, tagList);
   }
 
   private static NonNullList<ItemStack> getTargetItemStackDrops(ItemStack item) {
-    NBTTagCompound nbt = item.getOrCreateTag();
-    NBTTagList tagList = nbt.getList(NBT_KEY_BLOCK_DROPS, Constants.NBT.TAG_COMPOUND);
+    CompoundNBT nbt = item.getOrCreateTag();
+    ListNBT tagList = nbt.getList(NBT_KEY_BLOCK_DROPS, Constants.NBT.TAG_COMPOUND);
     NonNullList<ItemStack> drops = NonNullList.create();
     for (int i = 0; i < tagList.size(); i++) {
-      NBTTagCompound compound = tagList.getCompound(i);
+      CompoundNBT compound = tagList.getCompound(i);
       String blockId = compound.getString(NBT_KEY_BLOCK_ID);
       Block block = ObjectUtils.getBlock(blockId);
       ItemStack itemStack = new ItemStack(block);
@@ -385,146 +385,143 @@ public class ItemBlockExchanger extends ItemTool {
   }
 
   public static int getRange(ItemStack item) {
-    NBTTagCompound nbt = item.getOrCreateTag();
+    CompoundNBT nbt = item.getOrCreateTag();
     return nbt.getInt(NBT_KEY_BLOCK_RANGE);
   }
 
   private static void setRange(ItemStack item, int newRange) {
-    NBTTagCompound nbt = item.getOrCreateTag();
+    CompoundNBT nbt = item.getOrCreateTag();
     newRange = (ConfigUtils.COMMON.maxRange + 1 + newRange) % (ConfigUtils.COMMON.maxRange + 1);
-    nbt.setInt(NBT_KEY_BLOCK_RANGE, newRange);
+    nbt.putInt(NBT_KEY_BLOCK_RANGE, newRange);
   }
 
   public static boolean isAllExchangeMode(ItemStack item) {
-    NBTTagCompound nbt = item.getOrCreateTag();
+    CompoundNBT nbt = item.getOrCreateTag();
     return nbt.getBoolean(NBT_KEY_BLOCK_ALL_MODE);
   }
 
   private static void setAllExchangeMode(ItemStack item, boolean mode) {
-    NBTTagCompound nbt = item.getOrCreateTag();
-    nbt.setBoolean(NBT_KEY_BLOCK_ALL_MODE, mode);
+    CompoundNBT nbt = item.getOrCreateTag();
+    nbt.putBoolean(NBT_KEY_BLOCK_ALL_MODE, mode);
   }
 
   public static int getBuildMode(ItemStack item) {
-    NBTTagCompound nbt = item.getOrCreateTag();
+    CompoundNBT nbt = item.getOrCreateTag();
     return nbt.getInt(NBT_KEY_BLOCK_BUILD_MODE);
   }
 
   private static void setBuildMode(ItemStack item, int mode) {
-    NBTTagCompound nbt = item.getOrCreateTag();
-    mode = (EnumBuildMode.getMODESLength() + mode) % (EnumBuildMode.getMODESLength());
-    nbt.setInt(NBT_KEY_BLOCK_BUILD_MODE, mode);
+    CompoundNBT nbt = item.getOrCreateTag();
+    mode = (BuildMode.getMODESLength() + mode) % (BuildMode.getMODESLength());
+    nbt.putInt(NBT_KEY_BLOCK_BUILD_MODE, mode);
   }
 
   @Override
-  @Nonnull
-  public EnumActionResult onItemUse(ItemUseContext itemUseContext) {
-    EntityPlayer player = itemUseContext.getPlayer();
-    EnumHand hand = EnumHand.MAIN_HAND;
+  public ActionResultType onItemUse(ItemUseContext itemUseContext) {
+    PlayerEntity player = itemUseContext.getPlayer();
+    Hand hand = Hand.MAIN_HAND;
     World worldIn = itemUseContext.getWorld();
     BlockPos blockPos = itemUseContext.getPos();
-    EnumFacing side = itemUseContext.getFace();
+    Direction side = itemUseContext.getFace();
     assert player != null;
     ItemStack itemStack = player.getHeldItem(hand);
-    IBlockState state = worldIn.getBlockState(blockPos);
+    BlockState state = worldIn.getBlockState(blockPos);
     Block targetBlock = getTargetBlock(itemStack);
     ItemStack targetBlockStack = new ItemStack(state.getBlock(), 1);
-    if (targetBlock == null
-        || targetBlock == Blocks.AIR
-        || player.isSneaking()) {
-      targetBlock = state.getBlock();
+    if (targetBlock == AIR
+            || player.isSneaking()) {
       setTargetBlock(itemStack, state.getBlock());
-      NonNullList<ItemStack> drops = NonNullList.create();
-      targetBlock.getDrops(state, drops, worldIn, blockPos, 0);
-      setTargetItemStackDrops(itemStack, drops);
       if (!worldIn.isRemote) {
-
+        NonNullList<ItemStack> drops = NonNullList.create();
+        TileEntity tileentity = state.hasTileEntity() ? worldIn.getTileEntity(itemUseContext.getPos()) : null;
+        LootContext.Builder builder = (new LootContext.Builder((ServerWorld) worldIn)).withParameter(LootParameters.field_237457_g_, Vector3d.copyCentered(itemUseContext.getPos())).withParameter(LootParameters.BLOCK_STATE, state).withNullableParameter(LootParameters.BLOCK_ENTITY, tileentity).withNullableParameter(LootParameters.THIS_ENTITY, player).withParameter(LootParameters.TOOL, itemStack);
+        state.getDrops(builder);
+        setTargetItemStackDrops(itemStack, drops);
         String registerBlock = String
-            .format("Register block : %s",
-                targetBlockStack.getItem().getDisplayName(targetBlockStack).getFormattedText());
-        player.sendMessage(new TextComponentString(registerBlock));
+                .format("Register block : %s",
+                        targetBlockStack.getItem().getDisplayName(targetBlockStack).getString());
+        player.sendMessage(new StringTextComponent(registerBlock), player.getUniqueID());
       }
-      return EnumActionResult.SUCCESS;
+      return ActionResultType.SUCCESS;
     }
     int mode = getBuildMode(itemStack);
-    if (EnumBuildMode.getMode(mode) == EnumBuildMode.exchange) {
+    if (BuildMode.getMode(mode) == BuildMode.EXCHANGE) {
       //とりあえず、同種のブロックの繋がりを置換。
       searchAndExchangeExchangeableBlock(worldIn, player, targetBlockStack, blockPos, blockPos,
-          side, side,
-          itemStack);
+              side, side,
+              itemStack);
       dropDroppedBlockAtPlayer(worldIn, player);
     }
     List<BlockPos> blockPosList;
     boolean allMode = isAllExchangeMode(itemStack);
     int range = getRange(itemStack);
-    if (EnumBuildMode.getMode(mode) == EnumBuildMode.wall) {
+    if (BuildMode.getMode(mode) == BuildMode.WALL) {
       blockPosList = getNextWallBlockPosList(worldIn, player, blockPos, side, range, allMode);
       putBlockToBlockPosList(worldIn, player, blockPosList, itemStack, targetBlockStack, allMode);
     }
 
-    if (EnumBuildMode.getMode(mode) == EnumBuildMode.pillar) {
+    if (BuildMode.getMode(mode) == BuildMode.PILLAR) {
       blockPosList = getNextPillarBlockPosList(worldIn, blockPos, side, range, allMode);
       putBlockToBlockPosList(worldIn, player, blockPosList, itemStack, targetBlockStack, allMode);
     }
 
-    if (EnumBuildMode.getMode(mode) == EnumBuildMode.cube) {
+    if (BuildMode.getMode(mode) == BuildMode.CUBE) {
       blockPosList = getNextCubeBlockPosList(worldIn, player, blockPos, side, range, allMode);
       putBlockToBlockPosList(worldIn, player, blockPosList, itemStack, targetBlockStack, allMode);
     }
-    return EnumActionResult.SUCCESS;
+    return ActionResultType.SUCCESS;
   }
 
   @Override
-  @Nonnull
-  public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player,
-      @Nonnull EnumHand hand) {
+  public ActionResult<ItemStack> onItemRightClick(World world, PlayerEntity player,
+                                                  @Nonnull Hand hand) {
     ItemStack itemStack = player.getHeldItem(hand);
     if (world.isRemote) {
       PacketHandler.INSTANCE
-          .sendToServer(new MessageKeyPressed(ClientProxy.CTRL_KEY.isKeyDown()));
-      return new ActionResult<>(EnumActionResult.SUCCESS, itemStack);
+              .sendToServer(new MessageKeyPressed(ClientProxy.CTRL_KEY.isKeyDown()));
+      return ActionResult.resultSuccess(itemStack);
     }
-    return new ActionResult<>(EnumActionResult.SUCCESS, itemStack);
+    return ActionResult.resultSuccess(itemStack);
   }
 
   @Override
   public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip,
-      ITooltipFlag flagIn) {
+                             ITooltipFlag flagIn) {
     int range = 1 + getRange(stack) * 2;
     String blockRange = String.format("Range : %d*%d", range, range);
     Block block = getTargetBlock(stack);
     String blockName;
-    if (block != null && block != Blocks.AIR) {
+    if (block != AIR) {
       ItemStack targetBlockStack = new ItemStack(block, 1);
       blockName = String
-          .format("Target Block : %s", targetBlockStack.getDisplayName().getFormattedText());
+              .format("Target Block : %s", targetBlockStack.getDisplayName().getString());
     } else {
       blockName = "Target Block is not set";
     }
     String mode = String
-        .format("Build Mode : %s", EnumBuildMode.getMode(getBuildMode(stack)).name());
+            .format("Build Mode : %s", BuildMode.getMode(getBuildMode(stack)).name());
 
-    tooltip.add(new TextComponentString(blockName));
-    tooltip.add(new TextComponentString(blockRange));
-    tooltip.add(new TextComponentString(mode));
+    tooltip.add(new StringTextComponent(blockName));
+    tooltip.add(new StringTextComponent(blockRange));
+    tooltip.add(new StringTextComponent(mode));
   }
 
   /**
    * re-drop dropped blocks at player.
    *
-   * @param world World instance
-   * @param player EntityPlayer instance
+   * @param world  World instance
+   * @param player PlayerEntity instance
    */
-  private void dropDroppedBlockAtPlayer(World world, EntityPlayer player) {
-    List<EntityItem> list = world
-        .getEntitiesWithinAABB(EntityItem.class, player.getBoundingBox().expand(5d, 5d, 5d));
+  private void dropDroppedBlockAtPlayer(World world, PlayerEntity player) {
+    List<ItemEntity> list = world
+            .getEntitiesWithinAABB(ItemEntity.class, player.getBoundingBox().expand(5d, 5d, 5d));
     double d0, d1, d2;
     float f1 = player.rotationYaw * 0.01745329F;
-    for (EntityItem eItem : list) {
+    for (ItemEntity eItem : list) {
       eItem.setNoPickupDelay();
-      d0 = player.posX - MathHelper.sin(f1) * 0.5D;
-      d1 = player.posY;
-      d2 = player.posZ + MathHelper.cos(f1) * 0.5D;
+      d0 = player.getPosX() - MathHelper.sin(f1) * 0.5D;
+      d1 = player.getPosY();
+      d2 = player.getPosZ() + MathHelper.cos(f1) * 0.5D;
       eItem.setPosition(d0, d1, d2);
     }
   }
@@ -532,35 +529,35 @@ public class ItemBlockExchanger extends ItemTool {
   /**
    * search exchangeable block and exchange it
    *
-   * @param world World instance
-   * @param player EntityPlayer instance
-   * @param targetBlockStack Target block ItemStack instance
+   * @param world              World instance
+   * @param player             PlayerEntity instance
+   * @param targetBlockStack   Target block ItemStack instance
    * @param searchingTargetPos searching target BlockPos instance
-   * @param origin Searching origin BlockPos instance
-   * @param searchedFace EnumFacing to except searching
-   * @param originFace First touched face
-   * @param heldItem ItemExchanger ItemStack instance
+   * @param origin             Searching origin BlockPos instance
+   * @param searchedFace       Direction to except searching
+   * @param originFace         First touched face
+   * @param heldItem           ItemExchanger ItemStack instance
    */
-  private void searchAndExchangeExchangeableBlock(World world, EntityPlayer player,
-      ItemStack targetBlockStack,
-      BlockPos searchingTargetPos, BlockPos origin, EnumFacing searchedFace, EnumFacing originFace,
-      ItemStack heldItem) {
+  private void searchAndExchangeExchangeableBlock(World world, PlayerEntity player,
+                                                  ItemStack targetBlockStack,
+                                                  BlockPos searchingTargetPos, BlockPos origin, Direction searchedFace, Direction originFace,
+                                                  ItemStack heldItem) {
     if (!isVisibleBlock(world, getNextBlockPos(searchingTargetPos, originFace))
-        || !hasTargetBlock(heldItem, player)
-        || !exchangeBlock(world, player, heldItem, searchingTargetPos, targetBlockStack)) {
+            || !hasTargetBlock(heldItem, player)
+            || !exchangeBlock(world, player, heldItem, searchingTargetPos, targetBlockStack)) {
       return;
     }
-    for (EnumFacing enumFacing : EnumFacing.values()) {
+    for (Direction enumFacing : Direction.values()) {
       if (searchedFace.equals(enumFacing) || originFace.equals(enumFacing) || originFace
-          .getOpposite()
-          .equals(enumFacing)) {
+              .getOpposite()
+              .equals(enumFacing)) {
         continue;
       }
       BlockPos newPos = getNextBlockPos(searchingTargetPos, enumFacing);
       if (checkBlockInRange(heldItem, newPos, origin)) {
         searchAndExchangeExchangeableBlock(world, player, targetBlockStack, newPos, origin,
-            enumFacing.getOpposite(),
-            originFace, heldItem);
+                enumFacing.getOpposite(),
+                originFace, heldItem);
       }
     }
   }
@@ -569,14 +566,14 @@ public class ItemBlockExchanger extends ItemTool {
    * Player has target block or not
    *
    * @param exchangeItem ItemExchanger ItemStack instance
-   * @param player EntityPlayer instance
+   * @param player       PlayerEntity instance
    * @return true: player has target block
    */
-  private boolean hasTargetBlock(ItemStack exchangeItem, EntityPlayer player) {
+  private boolean hasTargetBlock(ItemStack exchangeItem, PlayerEntity player) {
     if (player.abilities.isCreativeMode) {
       return true;
     }
-    InventoryPlayer inv = player.inventory;
+    PlayerInventory inv = player.inventory;
     ItemStack targetBlockStack = new ItemStack(getTargetBlock(exchangeItem), 1);
     List<ItemStack> drops = getTargetItemStackDrops(exchangeItem);
     for (ItemStack item : inv.mainInventory) {
@@ -592,19 +589,4 @@ public class ItemBlockExchanger extends ItemTool {
     return false;
   }
 
-  public enum EnumBuildMode {
-    exchange,
-    wall,
-    pillar,
-    cube;
-    public static final EnumBuildMode[] MODES = {exchange, wall, pillar, cube};
-
-    public static EnumBuildMode getMode(int index) {
-      return MODES[index % MODES.length];
-    }
-
-    public static int getMODESLength() {
-      return MODES.length;
-    }
-  }
 }
