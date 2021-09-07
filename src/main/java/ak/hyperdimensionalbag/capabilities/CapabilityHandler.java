@@ -8,7 +8,9 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import javax.annotation.Nullable;
@@ -37,6 +39,18 @@ public class CapabilityHandler {
   public void onAttachingEntity(AttachCapabilitiesEvent<Entity> event) {
     if (event.getObject() instanceof PlayerEntity) {
       event.addCapability(BAG_DATA, new BagData());
+    }
+  }
+
+  @SubscribeEvent
+  public void onDeathPlayer(PlayerEvent.Clone event) {
+    if (event.isWasDeath()) {
+      //noinspection ConstantConditions
+      assert BagData.CAPABILITY != null;
+      LazyOptional<IBagData> oldCapability = event.getOriginal().getCapability(BagData.CAPABILITY, null);
+      LazyOptional<IBagData> newCapability = event.getPlayer().getCapability(BagData.CAPABILITY, null);
+      INBT nbt = BagData.CAPABILITY.writeNBT(oldCapability.orElse(new BagData()), null);
+      BagData.CAPABILITY.readNBT(newCapability.orElse(new BagData()), null, nbt);
     }
   }
 }
