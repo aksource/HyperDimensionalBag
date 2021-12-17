@@ -41,26 +41,26 @@ public class RenderBlockSelectionBox {
   @SubscribeEvent
   @SuppressWarnings("unused")
   public void onRenderSelectionBox(DrawHighlightEvent event) {
-    Entity entity = event.getInfo().getRenderViewEntity();
+    Entity entity = event.getInfo().getEntity();
     if (!(entity instanceof PlayerEntity)) {
       return;
     }
     PlayerEntity player = (PlayerEntity) entity;
-    ItemStack currentItem = player.getHeldItemMainhand();
+    ItemStack currentItem = player.getMainHandItem();
     if (event.getTarget().getType() == RayTraceResult.Type.BLOCK
         && !currentItem.isEmpty()
         && currentItem.getItem() instanceof BlockExchangerItem) {
       BlockRayTraceResult blockRayTraceResult = (BlockRayTraceResult) event.getTarget();
       List<BlockPos> list = new ArrayList<>();
-      World world = player.world;
-      BlockPos blockPos = blockRayTraceResult.getPos();
+      World world = player.level;
+      BlockPos blockPos = blockRayTraceResult.getBlockPos();
       BlockState state = world.getBlockState(blockPos);
-      Direction face = blockRayTraceResult.getFace();
+      Direction face = blockRayTraceResult.getDirection();
       ItemStack focusedBlockStack = new ItemStack(state.getBlock());
       int mode = BlockExchangerItem.getBuildMode(currentItem);
       boolean allMode = BlockExchangerItem.isAllExchangeMode(currentItem);
       MatrixStack matrixStack = event.getMatrix();
-      IVertexBuilder ivertexbuilder = event.getBuffers().getBuffer(RenderType.getLines());
+      IVertexBuilder ivertexbuilder = event.getBuffers().getBuffer(RenderType.lines());
       if (BuildMode.getMode(mode) == BuildMode.EXCHANGE) {
         searchBlock(world, focusedBlockStack, blockPos, blockPos, face, face, currentItem, list);
         renderBlockListSelectionBox(matrixStack, ivertexbuilder, list, player, event.getPartialTicks());
@@ -137,8 +137,8 @@ public class RenderBlockSelectionBox {
     ItemStack nowBlock = new ItemStack(block);
     Block targetBlock = BlockExchangerItem.getTargetBlock(item);
     ItemStack targetBlockStack = new ItemStack(targetBlock);
-    return !(targetBlockStack.isItemEqual(nowBlock)
-        || !BlockExchangerItem.isAllExchangeMode(item) && !firstFocusedBlock.isItemEqual(nowBlock));
+    return !(targetBlockStack.sameItem(nowBlock)
+        || !BlockExchangerItem.isAllExchangeMode(item) && !firstFocusedBlock.sameItem(nowBlock));
   }
 
   /**
@@ -151,23 +151,23 @@ public class RenderBlockSelectionBox {
                                            float partialTickItem) {
     double d3 = 0.002d;
     double playerPosX, playerPosY, playerPosZ;
-    GlStateManager.enableBlend();
+    GlStateManager._enableBlend();
     GlStateManager.glBlendFuncSeparate(770, 771, 1, 0);
-    GlStateManager.color4f(0.0F, 0.0F, 0.0F, 0.4F);
+    GlStateManager._color4f(0.0F, 0.0F, 0.0F, 0.4F);
     GL11.glLineWidth(2.0F);
-    GlStateManager.disableTexture();
-    GlStateManager.depthMask(false);
-    playerPosX = player.lastTickPosX + (player.getPosX() - player.lastTickPosX) * (double) partialTickItem;
-    playerPosY = player.lastTickPosY + (player.getPosY() - player.lastTickPosY) * (double) partialTickItem;
-    playerPosZ = player.lastTickPosZ + (player.getPosZ() - player.lastTickPosZ) * (double) partialTickItem;
+    GlStateManager._disableTexture();
+    GlStateManager._depthMask(false);
+    playerPosX = player.xOld + (player.getX() - player.xOld) * (double) partialTickItem;
+    playerPosY = player.yOld + (player.getY() - player.yOld) * (double) partialTickItem;
+    playerPosZ = player.zOld + (player.getZ() - player.zOld) * (double) partialTickItem;
     for (BlockPos blockPos : list) {
-      AxisAlignedBB axisAlignedBB = VoxelShapes.fullCube()
-          .getBoundingBox().offset(blockPos).expand(d3, d3, d3)
-          .offset(-playerPosX, -playerPosY - player.getEyeHeight(), -playerPosZ);
-      WorldRenderer.drawBoundingBox(matrixStack, vertexBuilder, axisAlignedBB, 1.0F, 1.0F, 1.0F, 1.0F);
+      AxisAlignedBB axisAlignedBB = VoxelShapes.block()
+          .bounds().move(blockPos).expandTowards(d3, d3, d3)
+          .move(-playerPosX, -playerPosY - player.getEyeHeight(), -playerPosZ);
+      WorldRenderer.renderLineBox(matrixStack, vertexBuilder, axisAlignedBB, 1.0F, 1.0F, 1.0F, 1.0F);
     }
-    GlStateManager.depthMask(true);
-    GlStateManager.enableTexture();
-    GlStateManager.disableBlend();
+    GlStateManager._depthMask(true);
+    GlStateManager._enableTexture();
+    GlStateManager._disableBlend();
   }
 }

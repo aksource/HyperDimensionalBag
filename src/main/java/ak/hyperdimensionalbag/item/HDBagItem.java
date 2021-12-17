@@ -32,18 +32,18 @@ public class HDBagItem extends Item {
   private final DyeColor dyeColor;
 
   public HDBagItem(DyeColor dyeColor) {
-    super(new Item.Properties().group(ItemGroup.TOOLS));
+    super(new Item.Properties().tab(ItemGroup.TAB_TOOLS));
     this.dyeColor = dyeColor;
   }
 
   @Override
-  public ActionResult<ItemStack> onItemRightClick(World world, PlayerEntity player,
+  public ActionResult<ItemStack> use(World world, PlayerEntity player,
                                                   Hand enumHand) {
-    if (!world.isRemote) {
+    if (!world.isClientSide) {
 //      NetworkHooks.openGui((ServerPlayerEntity) player, new InterfaceBag(dyeColor));
-      player.openContainer(new InterfaceBag(dyeColor));
+      player.openMenu(new InterfaceBag(dyeColor));
     }
-    return new ActionResult<>(ActionResultType.SUCCESS, player.getHeldItem(enumHand));
+    return new ActionResult<>(ActionResultType.SUCCESS, player.getItemInHand(enumHand));
   }
 
 //  @Override
@@ -83,7 +83,7 @@ public class HDBagItem extends Item {
     @Override
     public Container createMenu(int guiId, PlayerInventory playerInventory,
                                 PlayerEntity playerEntity) {
-      ItemStack heldItem = playerEntity.getHeldItemMainhand();
+      ItemStack heldItem = playerEntity.getMainHandItem();
       BagInventory bagInventory = new BagInventory(heldItem, playerEntity);
       return new BagContainer(guiId, playerInventory, bagInventory, color.getId());
     }
@@ -92,7 +92,7 @@ public class HDBagItem extends Item {
     public ITextComponent getDisplayName() {
       return new TranslationTextComponent("item."
               + HyperDimensionalBag.MOD_ID + "."
-              + RegistrationHandler.H_D_BAG_REGISTER_PREFIX + "_" + color.getTranslationKey());
+              + RegistrationHandler.H_D_BAG_REGISTER_PREFIX + "_" + color.getName());
     }
   }
 }

@@ -26,7 +26,7 @@ public class BagInventory implements IInventory {
   }
 
   @Override
-  public int getSizeInventory() {
+  public int getContainerSize() {
     return data.getItems(meta).size();
   }
 
@@ -36,12 +36,12 @@ public class BagInventory implements IInventory {
   }
 
   @Override
-  public ItemStack getStackInSlot(int index) {
+  public ItemStack getItem(int index) {
     return Optional.of(data.getItems(meta).get(index % data.getItems(meta).size())).orElse(ItemStack.EMPTY);
   }
 
   @Override
-  public ItemStack decrStackSize(int index, int count) {
+  public ItemStack removeItem(int index, int count) {
     NonNullList<ItemStack> items = data.getItems(meta);
     if (!items.get(index).isEmpty()) {
       ItemStack itemStack;
@@ -56,7 +56,7 @@ public class BagInventory implements IInventory {
         }
 
       }
-      this.markDirty();
+      this.setChanged();
       return itemStack;
     } else {
       return ItemStack.EMPTY;
@@ -64,34 +64,34 @@ public class BagInventory implements IInventory {
   }
 
   @Override
-  public ItemStack removeStackFromSlot(int index) {
+  public ItemStack removeItemNoUpdate(int index) {
     ItemStack itemStack = data.getItems(meta).get(index);
     data.getItems(meta).set(index, ItemStack.EMPTY);
     return itemStack;
   }
 
   @Override
-  public void setInventorySlotContents(int index, ItemStack itemStack) {
+  public void setItem(int index, ItemStack itemStack) {
     data.getItems(meta).set(index, itemStack);
   }
 
   @Override
-  public void markDirty() {
+  public void setChanged() {
 
   }
 
   @Override
-  public boolean isUsableByPlayer(PlayerEntity entityPlayer) {
+  public boolean stillValid(PlayerEntity entityPlayer) {
     return true;
   }
 
   @Override
-  public boolean isItemValidForSlot(int i, ItemStack itemstack) {
+  public boolean canPlaceItem(int i, ItemStack itemstack) {
     return !(itemstack.getItem() instanceof HDBagItem);
   }
 
   @Override
-  public void clear() {
+  public void clearContent() {
 
   }
 }

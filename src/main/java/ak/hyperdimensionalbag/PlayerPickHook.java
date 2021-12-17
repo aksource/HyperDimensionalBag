@@ -31,17 +31,17 @@ public class PlayerPickHook {
     if (HyperDimensionalBag.loadSB) {
       PlayerEntity player = event.getPlayer();
       ItemEntity item = event.getItem();
-      NonNullList<ItemStack> inv = player.inventory.mainInventory;
-      if (pickUpItemInBag(player.getEntityWorld(), inv, item.getItem())) {
+      NonNullList<ItemStack> inv = player.inventory.items;
+      if (pickUpItemInBag(player.getCommandSenderWorld(), inv, item.getItem())) {
         event.setCanceled(true);
-        player.getEntityWorld()
-            .playSound(player, new BlockPos(player.getPosX(), player.getPosY(), player.getPosZ()),
-                SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS,
+        player.getCommandSenderWorld()
+            .playSound(player, new BlockPos(player.getX(), player.getY(), player.getZ()),
+                SoundEvents.ITEM_PICKUP, SoundCategory.PLAYERS,
                 0.2F,
-                ((player.getEntityWorld().rand.nextFloat() - player.getEntityWorld().rand
+                ((player.getCommandSenderWorld().random.nextFloat() - player.getCommandSenderWorld().random
                     .nextFloat()) * 0.7F + 1.0F) * 2.0F);
         int stackSize = item.getItem().getCount();
-        player.onItemPickup(item, stackSize);
+        player.take(item, stackSize);
       }
     }
   }
@@ -72,7 +72,7 @@ public class PlayerPickHook {
   }
 
   private boolean areOreNameEquals(ItemStack check, ItemStack target) {
-    return check.isItemEqual(target);
+    return check.sameItem(target);
 /*        List<String> oreNames = getTagNames(target);
         if (oreNames != null && oreNames.size() > 0) {
             for (String oreName : oreNames) {
@@ -87,6 +87,6 @@ public class PlayerPickHook {
   }
 
   private Collection<ResourceLocation> getTagNames(ItemStack itemStack) {
-    return ItemTags.getCollection().getOwningTags(itemStack.getItem());
+    return ItemTags.getAllTags().getMatchingTags(itemStack.getItem());
   }
 }

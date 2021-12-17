@@ -43,10 +43,10 @@ public class ClientProxy extends CommonProxy {
   public void registerClientInfo(final FMLClientSetupEvent event) {
     MinecraftForge.EVENT_BUS.register(new RenderBlockSelectionBox());
     ClientRegistry.registerKeyBinding(CTRL_KEY);
-    ScreenManager.registerFactory(BAG_CONTAINER_TYPE, BagScreen::new);
+    ScreenManager.register(BAG_CONTAINER_TYPE, BagScreen::new);
     Minecraft mc = event.getMinecraftSupplier().get();
     mc.getItemColors().register((itemStack, tintIndex) ->
-            ((HDBagItem) itemStack.getItem()).getDyeColor().getMapColor().colorValue,
+            ((HDBagItem) itemStack.getItem()).getDyeColor().getMaterialColor().col,
             RegistrationHandler.ITEM_HD_BAG_LIST.toArray(new Item[]{}));
   }
 //

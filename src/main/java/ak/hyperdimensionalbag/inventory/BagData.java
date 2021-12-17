@@ -38,13 +38,13 @@ public class BagData extends WorldSavedData {
       this.upDate = true;
     }
     if (this.upDate) {
-      this.markDirty();
+      this.setDirty();
       this.upDate = false;
     }
   }
 
   @Override
-  public void read(@Nonnull CompoundNBT nbtTagCompound) {
+  public void load(@Nonnull CompoundNBT nbtTagCompound) {
     ListNBT itemTagList = nbtTagCompound.getList(NBT_KEY_ITEMS, Constants.NBT.TAG_COMPOUND);
 
     for (int tagIndex = 0; tagIndex < itemTagList.size(); ++tagIndex) {
@@ -52,21 +52,21 @@ public class BagData extends WorldSavedData {
       int i = itemNBT.getByte(NBT_KEY_SLOT) & 255;
 
       if (i < this.items.size()) {
-        this.items.set(i, ItemStack.read(itemNBT));
+        this.items.set(i, ItemStack.of(itemNBT));
       }
     }
   }
 
   @Override
   @Nonnull
-  public CompoundNBT write(@Nonnull CompoundNBT nbtTagCompound) {
+  public CompoundNBT save(@Nonnull CompoundNBT nbtTagCompound) {
     ListNBT nbtTagList = new ListNBT();
 
     for (int i = 0; i < this.items.size(); ++i) {
       if (this.items.get(i) != ItemStack.EMPTY) {
         CompoundNBT item = new CompoundNBT();
         item.putByte(NBT_KEY_SLOT, (byte) i);
-        this.items.get(i).write(item);
+        this.items.get(i).save(item);
         nbtTagList.add(item);
       }
     }

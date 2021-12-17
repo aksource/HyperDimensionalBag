@@ -54,37 +54,37 @@ public class BagContainer extends Container {
   }
 
   @Override
-  public boolean canInteractWith(PlayerEntity playerIn) {
-    ItemStack item = playerIn.getHeldItemMainhand();
+  public boolean stillValid(PlayerEntity playerIn) {
+    ItemStack item = playerIn.getMainHandItem();
     return !item.isEmpty() && item.getItem() instanceof HDBagItem
         && ((HDBagItem) item.getItem()).getDyeColor().getId() == metaDmg;
   }
 
   @Override
-  public ItemStack transferStackInSlot(PlayerEntity playerIn, int index) {
+  public ItemStack quickMoveStack(PlayerEntity playerIn, int index) {
     ItemStack itemstack = ItemStack.EMPTY;
-    Slot slot = this.inventorySlots.get(index);
+    Slot slot = this.slots.get(index);
 
-    if (slot != null && slot.getHasStack()) {
-      ItemStack itemstack1 = slot.getStack();
+    if (slot != null && slot.hasItem()) {
+      ItemStack itemstack1 = slot.getItem();
       itemstack = itemstack1.copy();
 
-      if (index < this.bagInventory.getSizeInventory()) {
+      if (index < this.bagInventory.getContainerSize()) {
         if (!this
-            .mergeItemStack(itemstack1, this.bagInventory.getSizeInventory(), this.inventorySlots.size(),
+            .moveItemStackTo(itemstack1, this.bagInventory.getContainerSize(), this.slots.size(),
                 true)) {
           return ItemStack.EMPTY;
         }
       } else if (itemstack1.getItem() instanceof HDBagItem) {
         return ItemStack.EMPTY;
-      } else if (!this.mergeItemStack(itemstack1, 0, this.bagInventory.getSizeInventory(), false)) {
+      } else if (!this.moveItemStackTo(itemstack1, 0, this.bagInventory.getContainerSize(), false)) {
         return ItemStack.EMPTY;
       }
 
       if (itemstack1.getCount() == 0) {
-        slot.putStack(ItemStack.EMPTY);
+        slot.set(ItemStack.EMPTY);
       } else {
-        slot.onSlotChanged();
+        slot.setChanged();
       }
     }
 

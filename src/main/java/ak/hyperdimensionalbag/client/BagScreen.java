@@ -21,26 +21,26 @@ public class BagScreen extends ContainerScreen<BagContainer> {
 
   public BagScreen(BagContainer bagContainer, PlayerInventory playerInventory, ITextComponent iTextComponent) {
     super(bagContainer, playerInventory, iTextComponent);
-    this.ySize = 114 + ROW_SIZE * 18;
-    this.playerInventoryTitleY = this.ySize - 94;
+    this.imageHeight = 114 + ROW_SIZE * 18;
+    this.inventoryLabelY = this.imageHeight - 94;
   }
 
   @Override
   public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
     this.renderBackground(matrixStack);
     super.render(matrixStack, mouseX, mouseY, partialTicks);
-    this.renderHoveredTooltip(matrixStack, mouseX, mouseY);
+    this.renderTooltip(matrixStack, mouseX, mouseY);
   }
 
   @Override
-  protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int x, int y) {
+  protected void renderBg(MatrixStack matrixStack, float partialTicks, int x, int y) {
     RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-    this.getMinecraft().getTextureManager().bindTexture(GUI_TEXTURE);
-    int i = (width - xSize) / 2;
-    int j = (height - ySize) / 2;
+    this.getMinecraft().getTextureManager().bind(GUI_TEXTURE);
+    int i = (width - imageWidth) / 2;
+    int j = (height - imageHeight) / 2;
 //    this.blit(matrixStack, i, j, 0, 0, xSize, ySize);
-    this.blit(matrixStack, i, j, 0, 0, this.xSize, ROW_SIZE * 18 + 17);
-    this.blit(matrixStack, i, j + ROW_SIZE * 18 + 17, 0, 126, this.xSize, 96);
+    this.blit(matrixStack, i, j, 0, 0, this.imageWidth, ROW_SIZE * 18 + 17);
+    this.blit(matrixStack, i, j + ROW_SIZE * 18 + 17, 0, 126, this.imageWidth, 96);
   }
 
 }

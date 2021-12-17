@@ -18,7 +18,7 @@ public class MessageKeyPressedHandler implements BiConsumer<MessageKeyPressed, S
   public void accept(MessageKeyPressed message, Supplier<Context> contextSupplier) {
     PlayerEntity player = contextSupplier.get().getSender();
     if (Objects.nonNull(player)) {
-      ItemStack itemStack = player.getHeldItemMainhand();
+      ItemStack itemStack = player.getMainHandItem();
       if (!itemStack.isEmpty() && itemStack.getItem() instanceof BlockExchangerItem) {
         BlockExchangerItem.onRightClickAction(itemStack, player, message.keyCtrlDown);
       }

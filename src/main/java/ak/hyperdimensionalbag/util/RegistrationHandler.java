@@ -33,7 +33,7 @@ public class RegistrationHandler {
     Arrays.stream(DyeColor.values())
             .forEach(dyeColor -> {
               Item item = new HDBagItem(dyeColor);
-              ITEMS.register(new StringJoiner("_").add(H_D_BAG_REGISTER_PREFIX).add(dyeColor.getTranslationKey()).toString(), () -> item);
+              ITEMS.register(new StringJoiner("_").add(H_D_BAG_REGISTER_PREFIX).add(dyeColor.getName()).toString(), () -> item);
               ITEM_HD_BAG_LIST.add(item);
             });
     ITEMS.register("itemblockexchanger", BlockExchangerItem::new);

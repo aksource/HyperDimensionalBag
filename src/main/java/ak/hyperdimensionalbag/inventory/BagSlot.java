@@ -16,7 +16,7 @@ public class BagSlot extends Slot {
     super(inventoryIn, index, xPosition, yPosition);
   }
 
-  public boolean isItemValid(ItemStack itemstack) {
+  public boolean mayPlace(ItemStack itemstack) {
     return !(itemstack.getItem() instanceof HDBagItem);
   }
 }
