@@ -31,7 +31,7 @@ public class RenderBlockSelectionBox {
 
   @SubscribeEvent
   public void onRenderSelectionBox(DrawSelectionEvent event) {
-    var entity = event.getInfo().getEntity();
+    var entity = event.getCamera().getEntity();
     if (!(entity instanceof Player player)) {
       return;
     }
@@ -48,8 +48,8 @@ public class RenderBlockSelectionBox {
       var focusedBlockStack = new ItemStack(state.getBlock());
       var mode = BlockExchangerItem.getBuildMode(currentItem);
       var allMode = BlockExchangerItem.isAllExchangeMode(currentItem);
-      var matrixStack = event.getMatrix();
-      var ivertexbuilder = event.getBuffers().getBuffer(RenderType.lines());
+      var matrixStack = event.getPoseStack();
+      var ivertexbuilder = event.getMultiBufferSource().getBuffer(RenderType.lines());
       int range = BlockExchangerItem.getRange(currentItem);
       switch (BuildMode.getMode(mode)) {
         case EXCHANGE -> searchBlock(world, focusedBlockStack, blockPos, blockPos, face, face, currentItem, list);
@@ -130,7 +130,6 @@ public class RenderBlockSelectionBox {
     RenderSystem.enableBlend();
     RenderSystem.blendFuncSeparate(770, 771, 1, 0);
     RenderSystem.setShaderColor(0.0F, 0.0F, 0.0F, 0.4F);
-//    GL11.glLineWidth(2.0F);
     RenderSystem.disableTexture();
     RenderSystem.depthMask(false);
     var playerPosX = player.xOld + (player.getX() - player.xOld) * (double) partialTickItem;

@@ -1,7 +1,7 @@
 package ak.hyperdimensionalbag.network;
 
 import ak.hyperdimensionalbag.item.BlockExchangerItem;
-import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;

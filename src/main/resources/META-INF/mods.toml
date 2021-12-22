@@ -1,5 +1,5 @@
 modLoader="javafml" #mandatory
-loaderVersion="[37,)" #mandatory (24 is current forge version)
+loaderVersion="[39,)" #mandatory (24 is current forge version)
 license="MIT License"
 issueTrackerURL="https://github.com/aksource/HyperDimensionalBag/issues" #optional
 displayURL="https://github.com/aksource/HyperDimensionalBag/" #optional
@@ -8,7 +8,7 @@ displayURL="https://github.com/aksource/HyperDimensionalBag/" #optional
 authors="ak" #optional
 [[mods]] #mandatory
 modId="hyperdimensionalbag" #mandatory
-version="1.17.1-1.3.3.0" #mandatory
+version="1.18.1-1.3.3.1" #mandatory
 displayName="HyperDimensionalBag" #mandatory
 #updateJSONURL="http://myurl.me/" #optional
 description='''
