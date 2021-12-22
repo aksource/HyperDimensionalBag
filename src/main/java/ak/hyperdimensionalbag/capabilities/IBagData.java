@@ -1,8 +1,11 @@
 package ak.hyperdimensionalbag.capabilities;
 
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
+
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.util.INBTSerializable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
@@ -12,7 +15,7 @@ import java.util.List;
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public interface IBagData {
+public interface IBagData extends INBTSerializable<CompoundTag> {
 
   NonNullList<ItemStack> getItems(int meta);
   List<NonNullList<ItemStack>> getAllItemsList();

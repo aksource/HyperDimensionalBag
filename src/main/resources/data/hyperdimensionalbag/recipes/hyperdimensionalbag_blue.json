@@ -3,7 +3,7 @@
   "group": "hyperdimensionalbag.dyed_hyperdimensionalbag",
   "ingredients": [
     {
-      "item": "minecraft:lapis_lazuli"
+      "tag": "forge:dyes/blue"
     },
     {
       "item": "hyperdimensionalbag:hyperdimensionalbag_white"

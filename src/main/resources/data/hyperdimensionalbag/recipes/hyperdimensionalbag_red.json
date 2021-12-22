@@ -3,7 +3,7 @@
   "group": "hyperdimensionalbag.dyed_hyperdimensionalbag",
   "ingredients": [
     {
-      "item": "minecraft:rose_red"
+      "tag": "forge:dyes/red"
     },
     {
       "item": "hyperdimensionalbag:hyperdimensionalbag_white"

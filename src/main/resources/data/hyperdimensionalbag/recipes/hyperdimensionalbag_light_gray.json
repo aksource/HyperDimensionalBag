@@ -3,7 +3,7 @@
   "group": "hyperdimensionalbag.dyed_hyperdimensionalbag",
   "ingredients": [
     {
-      "item": "minecraft:light_gray_dye"
+      "tag": "forge:dyes/light_gray"
     },
     {
       "item": "hyperdimensionalbag:hyperdimensionalbag_white"

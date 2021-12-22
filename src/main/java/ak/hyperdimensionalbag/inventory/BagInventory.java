@@ -3,25 +3,23 @@ package ak.hyperdimensionalbag.inventory;
 import ak.hyperdimensionalbag.capabilities.BagData;
 import ak.hyperdimensionalbag.capabilities.IBagData;
 import ak.hyperdimensionalbag.item.HDBagItem;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Objects;
 import java.util.Optional;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class BagInventory implements IInventory {
+public class BagInventory implements Container {
 
   private final IBagData data;
   private final int meta;
 
-  public BagInventory(ItemStack itemStack, PlayerEntity playerEntity) {
-    this.data = playerEntity.getCapability(Objects.requireNonNull(BagData.CAPABILITY), null).orElse(new BagData());
+  public BagInventory(ItemStack itemStack, Player playerEntity) {
+    this.data = playerEntity.getCapability(BagData.CAPABILITY, null).orElse(new BagData());
     this.meta = ((HDBagItem)itemStack.getItem()).getDyeColor().getId();
   }
 
@@ -42,7 +40,7 @@ public class BagInventory implements IInventory {
 
   @Override
   public ItemStack removeItem(int index, int count) {
-    NonNullList<ItemStack> items = data.getItems(meta);
+    var items = data.getItems(meta);
     if (!items.get(index).isEmpty()) {
       ItemStack itemStack;
       if (items.get(index).getCount() <= count) {
@@ -65,7 +63,7 @@ public class BagInventory implements IInventory {
 
   @Override
   public ItemStack removeItemNoUpdate(int index) {
-    ItemStack itemStack = data.getItems(meta).get(index);
+    var itemStack = data.getItems(meta).get(index);
     data.getItems(meta).set(index, ItemStack.EMPTY);
     return itemStack;
   }
@@ -81,7 +79,7 @@ public class BagInventory implements IInventory {
   }
 
   @Override
-  public boolean stillValid(PlayerEntity entityPlayer) {
+  public boolean stillValid(Player entityPlayer) {
     return true;
   }
 

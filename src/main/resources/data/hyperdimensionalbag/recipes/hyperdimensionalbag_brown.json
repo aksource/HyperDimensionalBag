@@ -3,7 +3,7 @@
   "group": "hyperdimensionalbag.dyed_hyperdimensionalbag",
   "ingredients": [
     {
-      "item": "minecraft:cocoa_beans"
+      "tag": "forge:dyes/brown"
     },
     {
       "item": "hyperdimensionalbag:hyperdimensionalbag_white"

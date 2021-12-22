@@ -1,47 +1,48 @@
 package ak.hyperdimensionalbag.item;
 
 import ak.hyperdimensionalbag.ConfigUtils;
-import ak.hyperdimensionalbag.client.ClientProxy;
+import ak.hyperdimensionalbag.client.ClientUtils;
+import ak.hyperdimensionalbag.inventory.BagInventory;
 import ak.hyperdimensionalbag.network.MessageKeyPressed;
 import ak.hyperdimensionalbag.network.PacketHandler;
 import ak.hyperdimensionalbag.util.ObjectUtils;
 import ak.hyperdimensionalbag.util.StorageBoxUtils;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.*;
-import net.minecraft.loot.LootContext;
-import net.minecraft.loot.LootParameters;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.*;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
-import static net.minecraft.block.Blocks.AIR;
+import static net.minecraft.nbt.Tag.TAG_COMPOUND;
+import static net.minecraft.world.level.block.Blocks.AIR;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class BlockExchangerItem extends ToolItem {
+public class BlockExchangerItem extends Item {
 
   public static final String NBT_KEY_BLOCK_STATE = "HDB|blockstate";
   private static final String NBT_KEY_BLOCK_ID = "HDB|targetBlockId";
@@ -52,61 +53,56 @@ public class BlockExchangerItem extends ToolItem {
   private static final String NBT_KEY_BLOCK_BUILD_MODE = "HDB|buildMode";
 
   public BlockExchangerItem() {
-    super(1.0F, 1.0F, ItemTier.DIAMOND, new HashSet<>(),
-            new Item.Properties().tab(ItemGroup.TAB_TOOLS).setNoRepair());
+    super(new Item.Properties().tab(CreativeModeTab.TAB_TOOLS).setNoRepair());
   }
 
   /**
    * do mouse right click action.<br> called on {@link ak.hyperdimensionalbag.network.MessageKeyPressedHandler}
    *
    * @param itemStack  ItemExchanger ItemStack instance
-   * @param player     PlayerEntity instance
+   * @param player     Player instance
    * @param keyPressed true: left Ctrl key is pressed
    */
-  public static void onRightClickAction(ItemStack itemStack, PlayerEntity player,
-                                        boolean keyPressed) {
+  public static void onRightClickAction(ItemStack itemStack, Player player, boolean keyPressed) {
     if (keyPressed) {
       if (player.isShiftKeyDown()) {
         setAllExchangeMode(itemStack, !isAllExchangeMode(itemStack));
-        String allExchangeMode = String
-                .format("All Exchange Mode : %b", isAllExchangeMode(itemStack));
-        player.sendMessage(new StringTextComponent(allExchangeMode), player.getUUID());
+        var allExchangeMode = String.format("All Exchange Mode : %b", isAllExchangeMode(itemStack));
+        player.sendMessage(new TextComponent(allExchangeMode), player.getUUID());
       } else {
-        int nowMode = getBuildMode(itemStack);
+        var nowMode = getBuildMode(itemStack);
         nowMode++;
         setBuildMode(itemStack, nowMode);
-        String buildMode = String
-                .format("Builder Mode : %s", BuildMode.getMode(getBuildMode(itemStack)).name());
-        player.sendMessage(new StringTextComponent(buildMode), player.getUUID());
+        var buildMode = String.format("Builder Mode : %s", BuildMode.getMode(getBuildMode(itemStack)).name());
+        player.sendMessage(new TextComponent(buildMode), player.getUUID());
       }
     } else {
-      int nowRange = getRange(itemStack);
-      int var1 = (player.isShiftKeyDown()) ? -1 : 1;
+      var nowRange = getRange(itemStack);
+      var var1 = (player.isShiftKeyDown()) ? -1 : 1;
       nowRange += var1;
       setRange(itemStack, nowRange);
-      int range = 1 + getRange(itemStack) * 2;
-      String blockRange = String.format("Range : %d*%d", range, range);
-      player.sendMessage(new StringTextComponent(blockRange), player.getUUID());
+      var range = 1 + getRange(itemStack) * 2;
+      var blockRange = String.format("Range : %d*%d", range, range);
+      player.sendMessage(new TextComponent(blockRange), player.getUUID());
     }
   }
 
-  public static List<BlockPos> getNextWallBlockPosList(World world, PlayerEntity player,
-                                                       BlockPos originPosition, Direction side, int range, boolean allMode) {
+  public static List<BlockPos> getNextWallBlockPosList(Level world, Player player, BlockPos originPosition, Direction side, int range, boolean allMode) {
     List<BlockPos> list = new ArrayList<>();
     //ターゲットしたブロックの面に接するブロックの座標
-    BlockPos blockPos = originPosition.relative(side);
-    int offsetX = side.getStepX();
-    int offsetY = side.getStepY();
-    int offsetZ = side.getStepZ();
-    int dx = 1 - Math.abs(offsetX);
-    int dy = 1 - Math.abs(offsetY);
-    int dz = 1 - Math.abs(offsetZ);
+    var blockPos = originPosition.relative(side);
+    var offsetX = side.getStepX();
+    var offsetY = side.getStepY();
+    var offsetZ = side.getStepZ();
+    var dx = 1 - Math.abs(offsetX);
+    var dy = 1 - Math.abs(offsetY);
+    var dz = 1 - Math.abs(offsetZ);
 
-    int start = 0;
-    int end = range * 2;
+    var start = 0;
+    var end = range * 2;
     if (side == Direction.DOWN || side == Direction.UP) {
-      double centerDifX = Math.abs(originPosition.getX() + 0.5D - player.getX());
-      double centerDifZ = Math.abs(originPosition.getZ() + 0.5D - player.getZ());
+      var centerDifX = Math.abs(originPosition.getX() + 0.5D - player.getX());
+      var centerDifZ = Math.abs(originPosition.getZ() + 0.5D - player.getZ());
 
       if (centerDifX < centerDifZ) {
         dz = 0;
@@ -124,11 +120,9 @@ public class BlockExchangerItem extends ToolItem {
     } else {
       dy = 0;
     }
-    BlockPos blockPos1;
-    for (int axis1 = start; axis1 <= end; axis1++) {
-      for (int axis2 = -range; axis2 <= range; axis2++) {
-        blockPos1 = blockPos.offset(offsetX * axis1 + dx * axis2, offsetY * axis1 + dy * axis2,
-                offsetZ * axis1 + dz * axis2);
+    for (var axis1 = start; axis1 <= end; axis1++) {
+      for (var axis2 = -range; axis2 <= range; axis2++) {
+        var blockPos1 = blockPos.offset(offsetX * axis1 + dx * axis2, offsetY * axis1 + dy * axis2, offsetZ * axis1 + dz * axis2);
         if (world.getBlockState(blockPos1).getBlock() == AIR || allMode) {
           list.add(blockPos1);
         }
@@ -137,13 +131,11 @@ public class BlockExchangerItem extends ToolItem {
     return list;
   }
 
-  public static List<BlockPos> getNextPillarBlockPosList(World world, BlockPos originPosition,
-                                                         Direction side, int range, boolean allMode) {
+  public static List<BlockPos> getNextPillarBlockPosList(Level world, BlockPos originPosition, Direction side, int range, boolean allMode) {
     List<BlockPos> list = new ArrayList<>();
-    BlockPos blockPos = originPosition.relative(side);
-    BlockPos blockPos1;
-    for (int axis1 = 0; axis1 <= range * 2; axis1++) {
-      blockPos1 = blockPos.relative(side, axis1);
+    var blockPos = originPosition.relative(side);
+    for (var axis1 = 0; axis1 <= range * 2; axis1++) {
+      var blockPos1 = blockPos.relative(side, axis1);
       if (world.getBlockState(blockPos1).getBlock() == AIR || allMode) {
         list.add(blockPos1);
       }
@@ -151,29 +143,28 @@ public class BlockExchangerItem extends ToolItem {
     return list;
   }
 
-  public static List<BlockPos> getNextCubeBlockPosList(World world, PlayerEntity player,
-                                                       BlockPos originPosition, Direction side, int range, boolean allMode) {
+  public static List<BlockPos> getNextCubeBlockPosList(Level world, Player player, BlockPos originPosition, Direction side, int range, boolean allMode) {
     List<BlockPos> list = new ArrayList<>();
-    BlockPos blockPos = originPosition.relative(side);
-    int offsetX = side.getStepX();
-    int offsetY = side.getStepY();
-    int offsetZ = side.getStepZ();
-    int dx = 1 - Math.abs(offsetX);
-    int dy = 1 - Math.abs(offsetY);
-    int dz = 1 - Math.abs(offsetZ);
-    int dx1 = 1 - Math.abs(offsetZ);
-    int dy1 = 1 - Math.abs(offsetY);
-    int dz1 = 1 - Math.abs(offsetX);
+    var blockPos = originPosition.relative(side);
+    var offsetX = side.getStepX();
+    var offsetY = side.getStepY();
+    var offsetZ = side.getStepZ();
+    var dx = 1 - Math.abs(offsetX);
+    var dy = 1 - Math.abs(offsetY);
+    var dz = 1 - Math.abs(offsetZ);
+    var dx1 = 1 - Math.abs(offsetZ);
+    var dy1 = 1 - Math.abs(offsetY);
+    var dz1 = 1 - Math.abs(offsetX);
 
-    int start = 0;
-    int end = range * 2;
-    int start1 = 0;
-    int end1 = range * 2;
+    var start = 0;
+    var end = range * 2;
+    var start1 = 0;
+    var end1 = range * 2;
     if (side == Direction.DOWN || side == Direction.UP) {
-      double centerDifX = Math.abs(originPosition.getX() + 0.5D - player.getX());
-      double signX = Math.signum(originPosition.getX() + 0.5D - player.getX());
-      double centerDifZ = Math.abs(originPosition.getZ() + 0.5D - player.getZ());
-      double signZ = Math.signum(originPosition.getZ() + 0.5D - player.getZ());
+      var centerDifX = Math.abs(originPosition.getX() + 0.5D - player.getX());
+      var signX = Math.signum(originPosition.getX() + 0.5D - player.getX());
+      var centerDifZ = Math.abs(originPosition.getZ() + 0.5D - player.getZ());
+      var signZ = Math.signum(originPosition.getZ() + 0.5D - player.getZ());
 
       if (centerDifX < centerDifZ) {
         dz = dx1 = 0;
@@ -204,12 +195,10 @@ public class BlockExchangerItem extends ToolItem {
     }
 
     BlockPos blockPos1;
-    for (int axis0 = start1; axis0 <= end1; axis0++) {
-      for (int axis1 = start; axis1 <= end; axis1++) {
-        for (int axis2 = -range; axis2 <= range; axis2++) {
-          blockPos1 = blockPos.offset(offsetX * axis1 + dx * axis2 + dx1 * axis0,
-                  offsetY * axis1 + dy * axis2 + dy1 * axis0,
-                  offsetZ * axis1 + dz * axis2 + dz1 * axis0);
+    for (var axis0 = start1; axis0 <= end1; axis0++) {
+      for (var axis1 = start; axis1 <= end; axis1++) {
+        for (var axis2 = -range; axis2 <= range; axis2++) {
+          blockPos1 = blockPos.offset(offsetX * axis1 + dx * axis2 + dx1 * axis0, offsetY * axis1 + dy * axis2 + dy1 * axis0, offsetZ * axis1 + dz * axis2 + dz1 * axis0);
           if (world.getBlockState(blockPos1).getBlock() == AIR || allMode) {
             list.add(blockPos1);
           }
@@ -219,27 +208,25 @@ public class BlockExchangerItem extends ToolItem {
     return list;
   }
 
-  private static void putBlockToBlockPosList(World world, PlayerEntity player, List<BlockPos> list,
-                                             ItemStack exchangeItem, ItemStack target, boolean allMode) {
-    for (BlockPos blockPos : list) {
-      BlockState state = world.getBlockState(blockPos);
-      Block block = state.getBlock();
-      ItemStack nowBlock = new ItemStack(block);
+  private static void putBlockToBlockPosList(Level world, Player player, List<BlockPos> list, ItemStack exchangeItem, ItemStack target, boolean allMode) {
+    for (var blockPos : list) {
+      var state = world.getBlockState(blockPos);
+      var block = state.getBlock();
+      var nowBlock = new ItemStack(block);
       if (target.sameItem(nowBlock) || (block != AIR && !allMode)) {
         continue;
       }
 
       if (decreaseBlockFromInventory(exchangeItem, player)) {
-        Block targetBlock = getTargetBlock(exchangeItem);
-        BlockState targetState = targetBlock.defaultBlockState();
+        var targetBlock = getTargetBlock(exchangeItem);
+        var targetState = targetBlock.defaultBlockState();
         world.setBlock(blockPos, targetState, 3);
         if (block != AIR) {
           block.playerWillDestroy(world, blockPos, targetState, player);
           block.destroy(world, blockPos, targetState);
-          if (!player.abilities.instabuild) {
-            TileEntity tile = world.getBlockEntity(blockPos);
-            block.playerDestroy(world, player, new BlockPos(player.getX(), player.getY(), player.getZ()),
-                    state, tile, player.getMainHandItem());
+          if (!player.getAbilities().instabuild) {
+            var tile = world.getBlockEntity(blockPos);
+            block.playerDestroy(world, player, new BlockPos(player.getX(), player.getY(), player.getZ()), state, tile, player.getMainHandItem());
           }
         }
       }
@@ -251,42 +238,32 @@ public class BlockExchangerItem extends ToolItem {
   }
 
   public static boolean checkBlockInRange(ItemStack item, BlockPos check, BlockPos origin) {
-    return Math.abs(check.getX() - origin.getX()) <= getRange(item)
-            && Math.abs(check.getY() - origin.getY()) <= getRange(item)
-            && Math.abs(check.getZ() - origin.getZ()) <= getRange(item);
+    return Math.abs(check.getX() - origin.getX()) <= getRange(item) && Math.abs(check.getY() - origin.getY()) <= getRange(item) && Math.abs(check.getZ() - origin.getZ()) <= getRange(item);
   }
 
-  @SuppressWarnings("deprecated")
-  public static boolean isVisibleBlock(World world, BlockPos pos) {
-    return ConfigUtils.COMMON.exchangeInvisibleBlock
-            || world.getBlockState(pos).getBlock() == AIR || !world.getBlockState(pos).getBlock()
-            .useShapeForLightOcclusion(world.getBlockState(pos));
+  public static boolean isInvisibleBlock(Level world, BlockPos pos) {
+    return !ConfigUtils.COMMON.exchangeInvisibleBlock && world.getBlockState(pos).getBlock() == AIR;
   }
 
-  private static boolean exchangeBlock(World world, PlayerEntity player, ItemStack item,
-                                       BlockPos pos, ItemStack firstFocusBlock) {
-    BlockState state = world.getBlockState(pos);
-    Block block = state.getBlock();
-    if (block == AIR) {
+  private static boolean exchangeBlock(Level world, Player player, ItemStack item, BlockPos pos, ItemStack firstFocusBlock) {
+    var state = world.getBlockState(pos);
+    var block = state.getBlock();
+    if (isInvisibleBlock(world, pos)) {
       return false;
     }
-    ItemStack nowBlock = new ItemStack(block);
-    Block targetBlock = getTargetBlock(item);
-    ItemStack targetBlockStack = new ItemStack(targetBlock);
-    BlockState targetState = targetBlock.defaultBlockState();
-    if (targetBlockStack.sameItem(nowBlock) || (!isAllExchangeMode(item) && !firstFocusBlock
-            .sameItem(nowBlock))) {
+    var nowBlock = new ItemStack(block);
+    var targetBlock = getTargetBlock(item);
+    var targetBlockStack = new ItemStack(targetBlock);
+    var targetState = targetBlock.defaultBlockState();
+    if (targetBlockStack.sameItem(nowBlock) || (!isAllExchangeMode(item) && !firstFocusBlock.sameItem(nowBlock))) {
       return false;
     }
     if (decreaseBlockFromInventory(item, player) && world.setBlock(pos, targetState, 3)) {
       block.playerWillDestroy(world, pos, state, player);
       block.destroy(world, pos, state);
-      if (!player.abilities.instabuild) {
-        TileEntity tile = world.getBlockEntity(pos);
-        block
-                .playerDestroy(world, player, new BlockPos(player.getX(), player.getY(), player.getZ()),
-                        state,
-                        tile, player.getMainHandItem());
+      if (!player.getAbilities().instabuild) {
+        var tile = world.getBlockEntity(pos);
+        block.playerDestroy(world, player, new BlockPos(player.getX(), player.getY(), player.getZ()), state, tile, player.getMainHandItem());
       }
       return true;
     } else {
@@ -294,53 +271,66 @@ public class BlockExchangerItem extends ToolItem {
     }
   }
 
-  private static boolean decreaseBlockFromInventory(ItemStack exchangeItem, PlayerEntity player) {
-    if (player.abilities.instabuild) {
+  private static boolean decreaseBlockFromInventory(ItemStack exchangeItem, Player player) {
+    if (player.getAbilities().instabuild) {
       return true;
     }
-    PlayerInventory inv = player.inventory;
-    ItemStack targetBlockStack = new ItemStack(getTargetBlock(exchangeItem), 1);
-    List<ItemStack> drops = getTargetItemStackDrops(exchangeItem);
-    for (int i = 0; i < inv.getContainerSize(); i++) {
-      ItemStack item = inv.getItem(i);
-      if (item.isEmpty()) {
+    var inv = player.getInventory();
+    var targetBlockStack = new ItemStack(getTargetBlock(exchangeItem), 1);
+    var drops = getTargetItemStackDrops(exchangeItem);
+    for (var i = 0; i < inv.getContainerSize(); i++) {
+      var itemStack = inv.getItem(i);
+      if (itemStack.isEmpty()) {
         continue;
       }
-      if (checkValidBlock(targetBlockStack, item, drops)) {
-        item.shrink(1);
-        if (item.getCount() == 0) {
+      if (itemStack.getItem() instanceof HDBagItem) {
+        var data = new BagInventory(itemStack, player);
+        for (var j = 0; j < data.getContainerSize(); j++) {
+          var bagItemStack = data.getItem(j);
+          if (checkValidBlock(targetBlockStack, bagItemStack, drops)) {
+            bagItemStack.shrink(1);
+            if (bagItemStack.getCount() == 0) {
+              data.setItem(j, ItemStack.EMPTY);
+            }
+            return true;
+          } else if (StorageBoxUtils.checkStorageBox(bagItemStack, targetBlockStack, drops)) {
+            StorageBoxUtils.removeStack(bagItemStack);
+            return true;
+          }
+        }
+      } else if (checkValidBlock(targetBlockStack, itemStack, drops)) {
+        itemStack.shrink(1);
+        if (itemStack.getCount() == 0) {
           inv.setItem(i, ItemStack.EMPTY);
         }
         return true;
-      } else if (StorageBoxUtils.checkStorageBox(item, targetBlockStack)) {
-        StorageBoxUtils.removeStack(item);
+      } else if (StorageBoxUtils.checkStorageBox(itemStack, targetBlockStack, drops)) {
+        StorageBoxUtils.removeStack(itemStack);
         return true;
       }
     }
     return false;
   }
 
-  private static boolean checkValidBlock(ItemStack target, ItemStack check, List<ItemStack> drops) {
-    if (target.getItem() != check.getItem()) {
-      return false;
-    } else {
-      for (ItemStack item : drops) {
+  public static boolean checkValidBlock(ItemStack target, ItemStack check, List<ItemStack> drops) {
+    if (target.getItem() == check.getItem()) {
+      for (var item : drops) {
         if (item.getItem() instanceof BlockItem && item.sameItem(check)) {
           return true;
         }
       }
-      return false;
     }
+    return false;
   }
 
   private static void setTargetBlock(ItemStack item, Block block) {
-    CompoundNBT nbt = item.getOrCreateTag();
+    var nbt = item.getOrCreateTag();
     nbt.putString(NBT_KEY_BLOCK_ID, Objects.requireNonNull(block.getRegistryName()).toString());
   }
 
   public static Block getTargetBlock(ItemStack item) {
-    CompoundNBT nbt = item.getOrCreateTag();
-    String blockId = nbt.getString(NBT_KEY_BLOCK_ID);
+    var nbt = item.getOrCreateTag();
+    var blockId = nbt.getString(NBT_KEY_BLOCK_ID);
     if (blockId.isEmpty()) {
       return AIR;
     }
@@ -349,21 +339,20 @@ public class BlockExchangerItem extends ToolItem {
 
   @Deprecated
   public static int getTargetItemStackMeta(ItemStack item) {
-    CompoundNBT nbt = item.getOrCreateTag();
+    var nbt = item.getOrCreateTag();
     return nbt.getInt(NBT_KEY_BLOCK_META);
   }
 
   private static void setTargetItemStackDrops(ItemStack item, List<ItemStack> drops) {
-    if (drops == null || drops.isEmpty()) {
+    if (drops.isEmpty()) {
       return;
     }
-    CompoundNBT nbt = item.getOrCreateTag();
-    ListNBT tagList = new ListNBT();
-    for (ItemStack itemStack : drops) {
+    var nbt = item.getOrCreateTag();
+    var tagList = new ListTag();
+    for (var itemStack : drops) {
       if (itemStack.getItem() instanceof BlockItem) {
-        CompoundNBT compound = new CompoundNBT();
-        compound.putString(NBT_KEY_BLOCK_ID, Objects
-                .requireNonNull(itemStack.getItem().getRegistryName()).toString());
+        var compound = new CompoundTag();
+        compound.putString(NBT_KEY_BLOCK_ID, Objects.requireNonNull(itemStack.getItem().getRegistryName()).toString());
         tagList.add(compound);
       }
     }
@@ -371,90 +360,85 @@ public class BlockExchangerItem extends ToolItem {
   }
 
   private static NonNullList<ItemStack> getTargetItemStackDrops(ItemStack item) {
-    CompoundNBT nbt = item.getOrCreateTag();
-    ListNBT tagList = nbt.getList(NBT_KEY_BLOCK_DROPS, Constants.NBT.TAG_COMPOUND);
+    var nbt = item.getOrCreateTag();
+    var tagList = nbt.getList(NBT_KEY_BLOCK_DROPS, TAG_COMPOUND);
     NonNullList<ItemStack> drops = NonNullList.create();
-    for (int i = 0; i < tagList.size(); i++) {
-      CompoundNBT compound = tagList.getCompound(i);
-      String blockId = compound.getString(NBT_KEY_BLOCK_ID);
-      Block block = ObjectUtils.getBlock(blockId);
-      ItemStack itemStack = new ItemStack(block);
+    for (var i = 0; i < tagList.size(); i++) {
+      var compound = tagList.getCompound(i);
+      var blockId = compound.getString(NBT_KEY_BLOCK_ID);
+      var block = ObjectUtils.getBlock(blockId);
+      var itemStack = new ItemStack(block);
       drops.add(itemStack);
     }
     return drops;
   }
 
   public static int getRange(ItemStack item) {
-    CompoundNBT nbt = item.getOrCreateTag();
+    var nbt = item.getOrCreateTag();
     return nbt.getInt(NBT_KEY_BLOCK_RANGE);
   }
 
   private static void setRange(ItemStack item, int newRange) {
-    CompoundNBT nbt = item.getOrCreateTag();
+    var nbt = item.getOrCreateTag();
     newRange = (ConfigUtils.COMMON.maxRange + 1 + newRange) % (ConfigUtils.COMMON.maxRange + 1);
     nbt.putInt(NBT_KEY_BLOCK_RANGE, newRange);
   }
 
   public static boolean isAllExchangeMode(ItemStack item) {
-    CompoundNBT nbt = item.getOrCreateTag();
+    var nbt = item.getOrCreateTag();
     return nbt.getBoolean(NBT_KEY_BLOCK_ALL_MODE);
   }
 
   private static void setAllExchangeMode(ItemStack item, boolean mode) {
-    CompoundNBT nbt = item.getOrCreateTag();
+    var nbt = item.getOrCreateTag();
     nbt.putBoolean(NBT_KEY_BLOCK_ALL_MODE, mode);
   }
 
   public static int getBuildMode(ItemStack item) {
-    CompoundNBT nbt = item.getOrCreateTag();
+    var nbt = item.getOrCreateTag();
     return nbt.getInt(NBT_KEY_BLOCK_BUILD_MODE);
   }
 
   private static void setBuildMode(ItemStack item, int mode) {
-    CompoundNBT nbt = item.getOrCreateTag();
+    var nbt = item.getOrCreateTag();
     mode = (BuildMode.getMODESLength() + mode) % (BuildMode.getMODESLength());
     nbt.putInt(NBT_KEY_BLOCK_BUILD_MODE, mode);
   }
 
   @Override
-  public ActionResultType useOn(ItemUseContext itemUseContext) {
-    PlayerEntity player = itemUseContext.getPlayer();
-    Hand hand = Hand.MAIN_HAND;
-    World worldIn = itemUseContext.getLevel();
-    BlockPos blockPos = itemUseContext.getClickedPos();
-    Direction side = itemUseContext.getClickedFace();
+  public InteractionResult useOn(UseOnContext itemUseContext) {
+    var player = itemUseContext.getPlayer();
+    var hand = InteractionHand.MAIN_HAND;
+    var worldIn = itemUseContext.getLevel();
+    var blockPos = itemUseContext.getClickedPos();
+    var side = itemUseContext.getClickedFace();
     assert player != null;
-    ItemStack itemStack = player.getItemInHand(hand);
-    BlockState state = worldIn.getBlockState(blockPos);
-    Block targetBlock = getTargetBlock(itemStack);
-    ItemStack targetBlockStack = new ItemStack(state.getBlock(), 1);
-    if (targetBlock == AIR
-            || player.isShiftKeyDown()) {
+    var itemStack = player.getItemInHand(hand);
+    var state = worldIn.getBlockState(blockPos);
+    var targetBlock = getTargetBlock(itemStack);
+    var targetBlockStack = new ItemStack(state.getBlock(), 1);
+    if (targetBlock == AIR || player.isShiftKeyDown()) {
       setTargetBlock(itemStack, state.getBlock());
       if (!worldIn.isClientSide) {
         NonNullList<ItemStack> drops = NonNullList.create();
-        TileEntity tileentity = state.hasTileEntity() ? worldIn.getBlockEntity(itemUseContext.getClickedPos()) : null;
-        LootContext.Builder builder = (new LootContext.Builder((ServerWorld) worldIn)).withParameter(LootParameters.ORIGIN, Vector3d.atCenterOf(itemUseContext.getClickedPos())).withParameter(LootParameters.BLOCK_STATE, state).withOptionalParameter(LootParameters.BLOCK_ENTITY, tileentity).withOptionalParameter(LootParameters.THIS_ENTITY, player).withParameter(LootParameters.TOOL, itemStack);
-        state.getDrops(builder);
+        var tileentity = state.hasBlockEntity() ? worldIn.getBlockEntity(itemUseContext.getClickedPos()) : null;
+        var builder = (new LootContext.Builder((ServerLevel) worldIn)).withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(itemUseContext.getClickedPos())).withParameter(LootContextParams.BLOCK_STATE, state).withOptionalParameter(LootContextParams.BLOCK_ENTITY, tileentity).withOptionalParameter(LootContextParams.THIS_ENTITY, player).withParameter(LootContextParams.TOOL, itemStack);
+        drops.addAll(state.getDrops(builder));
         setTargetItemStackDrops(itemStack, drops);
-        String registerBlock = String
-                .format("Register block : %s",
-                        targetBlockStack.getItem().getName(targetBlockStack).getString());
-        player.sendMessage(new StringTextComponent(registerBlock), player.getUUID());
+        var registerBlock = String.format("Register block : %s", targetBlockStack.getItem().getName(targetBlockStack).getString());
+        player.sendMessage(new TextComponent(registerBlock), player.getUUID());
       }
-      return ActionResultType.SUCCESS;
+      return InteractionResult.SUCCESS;
     }
-    int mode = getBuildMode(itemStack);
+    var mode = getBuildMode(itemStack);
     if (BuildMode.getMode(mode) == BuildMode.EXCHANGE) {
       //とりあえず、同種のブロックの繋がりを置換。
-      searchAndExchangeExchangeableBlock(worldIn, player, targetBlockStack, blockPos, blockPos,
-              side, side,
-              itemStack);
+      searchAndExchangeExchangeableBlock(worldIn, player, targetBlockStack, blockPos, blockPos, side, side, itemStack);
       dropDroppedBlockAtPlayer(worldIn, player);
     }
     List<BlockPos> blockPosList;
-    boolean allMode = isAllExchangeMode(itemStack);
-    int range = getRange(itemStack);
+    var allMode = isAllExchangeMode(itemStack);
+    var range = getRange(itemStack);
     if (BuildMode.getMode(mode) == BuildMode.WALL) {
       blockPosList = getNextWallBlockPosList(worldIn, player, blockPos, side, range, allMode);
       putBlockToBlockPosList(worldIn, player, blockPosList, itemStack, targetBlockStack, allMode);
@@ -469,59 +453,52 @@ public class BlockExchangerItem extends ToolItem {
       blockPosList = getNextCubeBlockPosList(worldIn, player, blockPos, side, range, allMode);
       putBlockToBlockPosList(worldIn, player, blockPosList, itemStack, targetBlockStack, allMode);
     }
-    return ActionResultType.SUCCESS;
+    return InteractionResult.SUCCESS;
   }
 
   @Override
-  public ActionResult<ItemStack> use(World world, PlayerEntity player,
-                                                  @Nonnull Hand hand) {
-    ItemStack itemStack = player.getItemInHand(hand);
+  public InteractionResultHolder<ItemStack> use(Level world, Player player, @Nonnull InteractionHand hand) {
+    var itemStack = player.getItemInHand(hand);
     if (world.isClientSide) {
-      PacketHandler.INSTANCE
-              .sendToServer(new MessageKeyPressed(ClientProxy.CTRL_KEY.isDown()));
-      return ActionResult.success(itemStack);
+      PacketHandler.INSTANCE.sendToServer(new MessageKeyPressed(ClientUtils.CTRL_KEY.isDown()));
+      return InteractionResultHolder.success(itemStack);
     }
-    return ActionResult.success(itemStack);
+    return InteractionResultHolder.success(itemStack);
   }
 
   @Override
-  public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip,
-                             ITooltipFlag flagIn) {
-    int range = 1 + getRange(stack) * 2;
-    String blockRange = String.format("Range : %d*%d", range, range);
-    Block block = getTargetBlock(stack);
+  public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+    var range = 1 + getRange(stack) * 2;
+    var blockRange = String.format("Range : %d*%d", range, range);
+    var block = getTargetBlock(stack);
     String blockName;
     if (block != AIR) {
-      ItemStack targetBlockStack = new ItemStack(block, 1);
-      blockName = String
-              .format("Target Block : %s", targetBlockStack.getHoverName().getString());
+      var targetBlockStack = new ItemStack(block, 1);
+      blockName = String.format("Target Block : %s", targetBlockStack.getHoverName().getString());
     } else {
       blockName = "Target Block is not set";
     }
-    String mode = String
-            .format("Build Mode : %s", BuildMode.getMode(getBuildMode(stack)).name());
+    var mode = String.format("Build Mode : %s", BuildMode.getMode(getBuildMode(stack)).name());
 
-    tooltip.add(new StringTextComponent(blockName));
-    tooltip.add(new StringTextComponent(blockRange));
-    tooltip.add(new StringTextComponent(mode));
+    tooltip.add(new TextComponent(blockName));
+    tooltip.add(new TextComponent(blockRange));
+    tooltip.add(new TextComponent(mode));
   }
 
   /**
    * re-drop dropped blocks at player.
    *
-   * @param world  World instance
-   * @param player PlayerEntity instance
+   * @param world  Level instance
+   * @param player Player instance
    */
-  private void dropDroppedBlockAtPlayer(World world, PlayerEntity player) {
-    List<ItemEntity> list = world
-            .getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().expandTowards(5d, 5d, 5d));
-    double d0, d1, d2;
-    float f1 = player.yRot * 0.01745329F;
-    for (ItemEntity eItem : list) {
+  private void dropDroppedBlockAtPlayer(Level world, Player player) {
+    var list = world.getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().expandTowards(5d, 5d, 5d));
+    var f1 = player.getYRot() * 0.01745329F;
+    for (var eItem : list) {
       eItem.setNoPickUpDelay();
-      d0 = player.getX() - MathHelper.sin(f1) * 0.5D;
-      d1 = player.getY();
-      d2 = player.getZ() + MathHelper.cos(f1) * 0.5D;
+      var d0 = player.getX() - Mth.sin(f1) * 0.5D;
+      var d1 = player.getY();
+      var d2 = player.getZ() + Mth.cos(f1) * 0.5D;
       eItem.setPos(d0, d1, d2);
     }
   }
@@ -529,8 +506,8 @@ public class BlockExchangerItem extends ToolItem {
   /**
    * search exchangeable block and exchange it
    *
-   * @param world              World instance
-   * @param player             PlayerEntity instance
+   * @param world              Level instance
+   * @param player             Player instance
    * @param targetBlockStack   Target block ItemStack instance
    * @param searchingTargetPos searching target BlockPos instance
    * @param origin             Searching origin BlockPos instance
@@ -538,26 +515,17 @@ public class BlockExchangerItem extends ToolItem {
    * @param originFace         First touched face
    * @param heldItem           ItemExchanger ItemStack instance
    */
-  private void searchAndExchangeExchangeableBlock(World world, PlayerEntity player,
-                                                  ItemStack targetBlockStack,
-                                                  BlockPos searchingTargetPos, BlockPos origin, Direction searchedFace, Direction originFace,
-                                                  ItemStack heldItem) {
-    if (!isVisibleBlock(world, getNextBlockPos(searchingTargetPos, originFace))
-            || !hasTargetBlock(heldItem, player)
-            || !exchangeBlock(world, player, heldItem, searchingTargetPos, targetBlockStack)) {
+  private void searchAndExchangeExchangeableBlock(Level world, Player player, ItemStack targetBlockStack, BlockPos searchingTargetPos, BlockPos origin, Direction searchedFace, Direction originFace, ItemStack heldItem) {
+    if (!hasTargetBlock(heldItem, player) || !exchangeBlock(world, player, heldItem, searchingTargetPos, targetBlockStack)) {
       return;
     }
-    for (Direction enumFacing : Direction.values()) {
-      if (searchedFace.equals(enumFacing) || originFace.equals(enumFacing) || originFace
-              .getOpposite()
-              .equals(enumFacing)) {
+    for (var enumFacing : Direction.values()) {
+      if (searchedFace.equals(enumFacing) || originFace.equals(enumFacing) || originFace.getOpposite().equals(enumFacing)) {
         continue;
       }
-      BlockPos newPos = getNextBlockPos(searchingTargetPos, enumFacing);
+      var newPos = getNextBlockPos(searchingTargetPos, enumFacing);
       if (checkBlockInRange(heldItem, newPos, origin)) {
-        searchAndExchangeExchangeableBlock(world, player, targetBlockStack, newPos, origin,
-                enumFacing.getOpposite(),
-                originFace, heldItem);
+        searchAndExchangeExchangeableBlock(world, player, targetBlockStack, newPos, origin, enumFacing.getOpposite(), originFace, heldItem);
       }
     }
   }
@@ -566,23 +534,33 @@ public class BlockExchangerItem extends ToolItem {
    * Player has target block or not
    *
    * @param exchangeItem ItemExchanger ItemStack instance
-   * @param player       PlayerEntity instance
+   * @param player       Player instance
    * @return true: player has target block
    */
-  private boolean hasTargetBlock(ItemStack exchangeItem, PlayerEntity player) {
-    if (player.abilities.instabuild) {
+  private boolean hasTargetBlock(ItemStack exchangeItem, Player player) {
+    if (player.getAbilities().instabuild) {
       return true;
     }
-    PlayerInventory inv = player.inventory;
-    ItemStack targetBlockStack = new ItemStack(getTargetBlock(exchangeItem), 1);
-    List<ItemStack> drops = getTargetItemStackDrops(exchangeItem);
-    for (ItemStack item : inv.items) {
-      if (item.isEmpty()) {
+    var inv = player.getInventory();
+    var targetBlockStack = new ItemStack(getTargetBlock(exchangeItem), 1);
+    var drops = getTargetItemStackDrops(exchangeItem);
+    for (var itemStack : inv.items) {
+      if (itemStack.isEmpty()) {
         continue;
       }
-      if (checkValidBlock(targetBlockStack, item, drops)) {
+      if (itemStack.getItem() instanceof HDBagItem) {
+        var data = new BagInventory(itemStack, player);
+        for (var j = 0; j < data.getContainerSize(); j++) {
+          var bagItemStack = data.getItem(j);
+          if (checkValidBlock(targetBlockStack, bagItemStack, drops)) {
+            return true;
+          } else if (StorageBoxUtils.checkStorageBox(bagItemStack, targetBlockStack, drops)) {
+            return true;
+          }
+        }
+      } else if (checkValidBlock(targetBlockStack, itemStack, drops)) {
         return true;
-      } else if (StorageBoxUtils.checkStorageBox(item, targetBlockStack)) {
+      } else if (StorageBoxUtils.checkStorageBox(itemStack, targetBlockStack, drops)) {
         return true;
       }
     }

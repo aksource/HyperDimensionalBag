@@ -1,10 +1,11 @@
 package ak.hyperdimensionalbag.network;
 
+import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.fmllegacy.network.NetworkRegistry;
+import net.minecraftforge.fmllegacy.network.simple.SimpleChannel;
+
 import static ak.hyperdimensionalbag.HyperDimensionalBag.MOD_ID;
 
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.network.NetworkRegistry;
-import net.minecraftforge.fml.network.simple.SimpleChannel;
 
 /**
  * Created by A.K. on 14/06/02.

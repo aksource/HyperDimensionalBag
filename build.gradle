@@ -12,13 +12,14 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 
-def mc_version = '1.16.4'
-def forge_version = '35.1.4'
-version = "${mc_version}-1.3.2.1" as Object
-group = 'jp.aksource.mcmod' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = 'HyperDimensionalBag'
+def mc_version = '1.17.1'
+def forge_version = '37.1.1'
+def mod_id = 'hyperdimensionalbag'
+version = "${mc_version}-1.3.3.0" as Object
+group = 'ak.mcmod' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = 'hyper-dimensional-bag'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 
 minecraft {
     // the mappings can be changed at any time, and must be in the following format.
@@ -26,7 +27,7 @@ minecraft {
     // stable_#            stables are built at the discretion of the MCP team.
     // Use non-default mappings at your own risk. they may not always work.
     // simply re-run your setup task after changing the mappings to update your workspace.
-    mappings channel: 'official', version: '1.16.5'
+    mappings channel: 'official', version: mc_version
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
     //accessTransformer = file('my_at.cfg')
@@ -50,7 +51,7 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             mods {
-                'multitoolholders' {
+                hyperdimensionalbag {
                     source sourceSets.main
                 }
             }
@@ -72,7 +73,7 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             mods {
-                'multitoolholders' {
+                hyperdimensionalbag {
                     source sourceSets.main
                 }
             }
@@ -94,10 +95,10 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            args '--mod', 'chaindestruction', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
 
             mods {
-                'multitoolholders' {
+                hyperdimensionalbag {
                     source sourceSets.main
                 }
             }
@@ -117,9 +118,9 @@ jar {
     manifest {
         attributes(["Specification-Title": "HyperDimensionalBag",
                     "Specification-Vendor": "ak",
-                    "Specification-Version": "35.0", // We are version 1 of the modlauncher specification
+                    "Specification-Version": "37.0", // We are version 1 of the modlauncher specification
                     "Implementation-Title": project.name,
-                    "Implementation-Version": "${version}",
+                    "Implementation-Version": "${archiveVersion}",
                     "Implementation-Vendor" :"ak",
                     "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")],)
     }

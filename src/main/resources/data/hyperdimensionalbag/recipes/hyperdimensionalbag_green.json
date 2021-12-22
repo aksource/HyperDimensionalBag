@@ -3,7 +3,7 @@
   "group": "hyperdimensionalbag.dyed_hyperdimensionalbag",
   "ingredients": [
     {
-      "item": "minecraft:cactus_green"
+      "tag": "forge:dyes/green"
     },
     {
       "item": "hyperdimensionalbag:hyperdimensionalbag_white"
