@@ -9,6 +9,7 @@ import net.minecraft.world.item.Item;
 import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.registries.RegistryObject;
 import org.lwjgl.glfw.GLFW;
 
 import static ak.hyperdimensionalbag.inventory.BagContainer.BAG_CONTAINER_TYPE;
@@ -19,13 +20,13 @@ public class ClientUtils {
           GLFW.GLFW_KEY_LEFT_CONTROL,
           "HyperDimensionalBag");
 
-  public static void registerClientInfo(final FMLClientSetupEvent event) {
+  public static void registerClientInfo(@SuppressWarnings("unused") final FMLClientSetupEvent event) {
     MinecraftForge.EVENT_BUS.register(new RenderBlockSelectionBox());
     ClientRegistry.registerKeyBinding(CTRL_KEY);
     MenuScreens.register(BAG_CONTAINER_TYPE, BagScreen::new);
     Minecraft mc = Minecraft.getInstance();
     mc.getItemColors().register((itemStack, tintIndex) ->
             ((HDBagItem) itemStack.getItem()).getDyeColor().getMaterialColor().col,
-            RegistrationHandler.ITEM_HD_BAG_LIST.toArray(new Item[]{}));
+            RegistrationHandler.ITEM_HD_BAG_LIST.stream().map(RegistryObject::get).toArray(Item[]::new));
   }
 }

@@ -31,8 +31,8 @@ public class BagContainer extends AbstractContainerMenu {
     super(BAG_CONTAINER_TYPE, id);
     bagInventory = inv;
     metaDmg = meta;
-    for (int i = 0; i < ROW_SIZE; i++) {
-      for (int j = 0; j < 9; j++) {
+    for (var i = 0; i < ROW_SIZE; i++) {
+      for (var j = 0; j < 9; j++) {
         this.addSlot(new BagSlot(inv, j + i * 9, 8 + j * 18, 18 + i * 18));
       }
     }
@@ -41,14 +41,14 @@ public class BagContainer extends AbstractContainerMenu {
 
   private void bindPlayerInventory(Inventory playerInventory) {
     var offset = (ROW_SIZE - 4) * 18;
-    for (int i = 0; i < 3; i++) {
-      for (int j = 0; j < 9; j++) {
+    for (var i = 0; i < 3; i++) {
+      for (var j = 0; j < 9; j++) {
         addSlot(new Slot(playerInventory, j + i * 9 + 9,
             8 + j * 18, 103 + i * 18 + offset));
       }
     }
 
-    for (int i = 0; i < 9; i++) {
+    for (var i = 0; i < 9; i++) {
       addSlot(new Slot(playerInventory, i, 8 + i * 18, 161 + offset));
     }
   }

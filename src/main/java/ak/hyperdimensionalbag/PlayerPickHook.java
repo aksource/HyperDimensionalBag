@@ -9,14 +9,17 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -80,6 +83,11 @@ public class PlayerPickHook {
   }
 
   private static Collection<ResourceLocation> getTagNames(ItemStack itemStack) {
-    return ItemTags.getAllTags().getMatchingTags(itemStack.getItem());
+    var tagNames = new ArrayList<ResourceLocation>();
+    var tagManager = ForgeRegistries.ITEMS.tags();
+    if (Objects.nonNull(tagManager)) {
+      tagManager.getReverseTag(itemStack.getItem()).ifPresent(tag -> tagNames.addAll(tag.getTagKeys().map(TagKey::location).toList()));
+    }
+    return tagNames;
   }
 }

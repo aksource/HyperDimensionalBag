@@ -14,7 +14,6 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
@@ -29,6 +28,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -68,13 +68,13 @@ public class BlockExchangerItem extends Item {
       if (player.isShiftKeyDown()) {
         setAllExchangeMode(itemStack, !isAllExchangeMode(itemStack));
         var allExchangeMode = String.format("All Exchange Mode : %b", isAllExchangeMode(itemStack));
-        player.sendMessage(new TextComponent(allExchangeMode), player.getUUID());
+        player.sendSystemMessage(Component.literal(allExchangeMode));
       } else {
         var nowMode = getBuildMode(itemStack);
         nowMode++;
         setBuildMode(itemStack, nowMode);
         var buildMode = String.format("Builder Mode : %s", BuildMode.getMode(getBuildMode(itemStack)).name());
-        player.sendMessage(new TextComponent(buildMode), player.getUUID());
+        player.sendSystemMessage(Component.literal(buildMode));
       }
     } else {
       var nowRange = getRange(itemStack);
@@ -83,7 +83,7 @@ public class BlockExchangerItem extends Item {
       setRange(itemStack, nowRange);
       var range = 1 + getRange(itemStack) * 2;
       var blockRange = String.format("Range : %d*%d", range, range);
-      player.sendMessage(new TextComponent(blockRange), player.getUUID());
+      player.sendSystemMessage(Component.literal(blockRange));
     }
   }
 
@@ -325,7 +325,7 @@ public class BlockExchangerItem extends Item {
 
   private static void setTargetBlock(ItemStack item, Block block) {
     var nbt = item.getOrCreateTag();
-    nbt.putString(NBT_KEY_BLOCK_ID, Objects.requireNonNull(block.getRegistryName()).toString());
+    nbt.putString(NBT_KEY_BLOCK_ID, Objects.requireNonNull(ForgeRegistries.BLOCKS.getKey(block)).toString());
   }
 
   public static Block getTargetBlock(ItemStack item) {
@@ -352,7 +352,7 @@ public class BlockExchangerItem extends Item {
     for (var itemStack : drops) {
       if (itemStack.getItem() instanceof BlockItem) {
         var compound = new CompoundTag();
-        compound.putString(NBT_KEY_BLOCK_ID, Objects.requireNonNull(itemStack.getItem().getRegistryName()).toString());
+        compound.putString(NBT_KEY_BLOCK_ID, Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(itemStack.getItem())).toString());
         tagList.add(compound);
       }
     }
@@ -426,7 +426,7 @@ public class BlockExchangerItem extends Item {
         drops.addAll(state.getDrops(builder));
         setTargetItemStackDrops(itemStack, drops);
         var registerBlock = String.format("Register block : %s", targetBlockStack.getItem().getName(targetBlockStack).getString());
-        player.sendMessage(new TextComponent(registerBlock), player.getUUID());
+        player.sendSystemMessage(Component.literal(registerBlock));
       }
       return InteractionResult.SUCCESS;
     }
@@ -480,9 +480,9 @@ public class BlockExchangerItem extends Item {
     }
     var mode = String.format("Build Mode : %s", BuildMode.getMode(getBuildMode(stack)).name());
 
-    tooltip.add(new TextComponent(blockName));
-    tooltip.add(new TextComponent(blockRange));
-    tooltip.add(new TextComponent(mode));
+    tooltip.add(Component.literal(blockName));
+    tooltip.add(Component.literal(blockRange));
+    tooltip.add(Component.literal(mode));
   }
 
   /**

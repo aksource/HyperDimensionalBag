@@ -6,7 +6,6 @@ import ak.hyperdimensionalbag.inventory.BagInventory;
 import ak.hyperdimensionalbag.util.RegistrationHandler;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.MenuProvider;
@@ -52,14 +51,14 @@ public class HDBagItem extends Item {
     @Override
     public AbstractContainerMenu createMenu(int guiId, Inventory playerInventory,
                                             Player playerEntity) {
-      ItemStack heldItem = playerEntity.getMainHandItem();
-      BagInventory bagInventory = new BagInventory(heldItem, playerEntity);
+      var heldItem = playerEntity.getMainHandItem();
+      var bagInventory = new BagInventory(heldItem, playerEntity);
       return new BagContainer(guiId, playerInventory, bagInventory, color.getId());
     }
 
     @Override
     public Component getDisplayName() {
-      return new TranslatableComponent("item."
+      return Component.translatable("item."
               + HyperDimensionalBag.MOD_ID + "."
               + RegistrationHandler.H_D_BAG_REGISTER_PREFIX + "_" + color.getName());
     }

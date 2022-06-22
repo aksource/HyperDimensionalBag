@@ -16,6 +16,7 @@ public class BagSlot extends Slot {
     super(inventoryIn, index, xPosition, yPosition);
   }
 
+  @Override
   public boolean mayPlace(ItemStack itemstack) {
     return !(itemstack.getItem() instanceof HDBagItem);
   }

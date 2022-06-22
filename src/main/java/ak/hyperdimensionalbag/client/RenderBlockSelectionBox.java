@@ -60,7 +60,7 @@ public class RenderBlockSelectionBox {
                 .getNextCubeBlockPosList(world, player, blockPos, face, range, allMode);
       }
       if (!list.isEmpty()) {
-        renderBlockListSelectionBox(matrixStack, ivertexbuilder, list, player, event.getPartialTicks());
+        renderBlockListSelectionBox(matrixStack, ivertexbuilder, list, player, event.getPartialTick());
         event.setCanceled(true);
       }
     }
