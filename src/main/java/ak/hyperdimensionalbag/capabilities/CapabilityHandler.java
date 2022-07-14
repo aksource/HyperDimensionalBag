@@ -31,7 +31,7 @@ public class CapabilityHandler {
   public static void onDeathPlayer(PlayerEvent.Clone event) {
     if (event.isWasDeath()) {
       var oldCapability = event.getOriginal().getCapability(BagData.CAPABILITY, null);
-      var newCapability = event.getPlayer().getCapability(BagData.CAPABILITY, null);
+      var newCapability = event.getEntity().getCapability(BagData.CAPABILITY, null);
       oldCapability.ifPresent(oldData -> {
         var nbt = oldData.serializeNBT();
         newCapability.ifPresent(newData -> newData.deserializeNBT(nbt));

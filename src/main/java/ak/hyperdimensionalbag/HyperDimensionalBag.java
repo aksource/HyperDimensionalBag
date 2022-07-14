@@ -43,6 +43,9 @@ public class HyperDimensionalBag {
   }
 
   private void clientInit(final FMLClientSetupEvent event) {
+    final var modEventBus =
+            FMLJavaModLoadingContext.get().getModEventBus();
+    modEventBus.addListener(ClientUtils::registerKeyBinding);
     ClientUtils.registerClientInfo(event);
   }
 

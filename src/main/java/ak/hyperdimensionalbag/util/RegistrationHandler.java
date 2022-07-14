@@ -26,7 +26,7 @@ import static ak.hyperdimensionalbag.HyperDimensionalBag.MOD_ID;
 public class RegistrationHandler {
 
   private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
-  private static final DeferredRegister<MenuType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.CONTAINERS, MOD_ID);
+  private static final DeferredRegister<MenuType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, MOD_ID);
   public static final List<RegistryObject<Item>> ITEM_HD_BAG_LIST = new ArrayList<>();
   public static final String H_D_BAG_REGISTER_PREFIX = "hyperdimensionalbag";
 

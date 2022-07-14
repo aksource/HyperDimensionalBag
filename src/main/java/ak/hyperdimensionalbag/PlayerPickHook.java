@@ -28,7 +28,7 @@ public class PlayerPickHook {
   @SubscribeEvent
   public static void pickUpEvent(final EntityItemPickupEvent event) {
     if (HyperDimensionalBag.loadSB) {
-      var player = event.getPlayer();
+      var player = event.getEntity();
       var item = event.getItem();
       var inv = player.getInventory().items;
       if (pickUpItemInBag(player, inv, item.getItem())) {
