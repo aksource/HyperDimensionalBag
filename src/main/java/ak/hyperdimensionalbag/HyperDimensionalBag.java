@@ -31,6 +31,7 @@ public class HyperDimensionalBag {
     modEventBus.addListener(this::preInit);
     modEventBus.addListener(this::clientInit);
     modEventBus.addListener(this::postInit);
+    modEventBus.addListener(ConfigUtils::configLoading);
     RegistrationHandler.register(modEventBus);
 
     MinecraftForge.EVENT_BUS.register(PlayerPickHook.class);

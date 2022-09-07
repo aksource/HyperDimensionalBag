@@ -5,9 +5,10 @@ plugins {
 }
 //apply from: 'https://raw.githubusercontent.com/SizableShrimp/ForgeUpdatesRemapper/main/remapper.gradle'
 def mc_version = '1.19'
-def forge_version = '41.1.0'
+def forge_major_ver = 41
+def forge_version = "${forge_major_ver}.1.0"
 def mod_id = 'hyperdimensionalbag'
-version = "${mc_version}-1.3.3.4" as Object
+version = "${mc_version}-1.3.3.5" as Object
 group = 'ak.mcmod' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'hyper-dimensional-bag'
 
@@ -108,15 +109,29 @@ jar.finalizedBy('reobfJar')
 // Example for how to get properties into the manifest for reading by the runtime..
 jar {
     manifest {
-        attributes(["Specification-Title": "HyperDimensionalBag",
-                    "Specification-Vendor": "ak",
-                    "Specification-Version": "37.0", // We are version 1 of the modlauncher specification
-                    "Implementation-Title": project.name,
-                    "Implementation-Version": "${archiveVersion}",
-                    "Implementation-Vendor" :"ak",
-                    "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")],)
+        attributes(["Specification-Title"     : "HyperDimensionalBag",
+                    "Specification-Vendor"    : "ak",
+                    "Specification-Version"   : "37.0", // We are version 1 of the modlauncher specification
+                    "Implementation-Title"    : project.name,
+                    "Implementation-Version"  : "${archiveVersion}",
+                    "Implementation-Vendor"   : "ak",
+                    "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                    "Built-On-Java"           : "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
+                    "Built-On"                : "${forge_version}"
+        ],)
     }
 }
+
+processResources {
+    from sourceSets.main.resources
+    def buildProps = project.properties.clone()
+    buildProps.put('file', [jarVersion: project.version])
+    buildProps.put('forge_major_ver', forge_major_ver)
+    filesMatching(['META-INF/mods.toml']) {
+        expand buildProps
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
