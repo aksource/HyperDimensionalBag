@@ -31,12 +31,12 @@ public class HyperDimensionalBag {
     modEventBus.addListener(this::preInit);
     modEventBus.addListener(this::clientInit);
     modEventBus.addListener(this::postInit);
-    modEventBus.addListener(ConfigUtils::configLoading);
     RegistrationHandler.register(modEventBus);
 
     MinecraftForge.EVENT_BUS.register(PlayerPickHook.class);
     MinecraftForge.EVENT_BUS.register(CapabilityHandler.class);
     ModLoadingContext.get().registerConfig(Type.COMMON, ConfigUtils.configSpec);
+    modEventBus.register(ConfigUtils.class);
   }
 
   private void preInit(final FMLCommonSetupEvent event) {
